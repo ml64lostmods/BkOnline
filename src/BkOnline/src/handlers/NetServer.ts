@@ -1,0 +1,393 @@
+import { EventHandler, EventsServer, EventServerJoined, EventServerLeft } from 'modloader64_api/EventHandler';
+import { IModLoaderAPI } from 'modloader64_api/IModLoaderAPI';
+import { ServerNetworkHandler } from 'modloader64_api/NetworkHandler';
+import { Packet } from 'modloader64_api/ModLoaderDefaultImpls';
+import { BkOnline_Handlers } from './Handlers';
+import * as Main from '../Main';
+import * as API from 'BanjoKazooie/API/Imports';
+import * as Net from '../network/Imports';
+
+export class BkOnline_Server {
+    private parent!: Main.BkOnline;
+
+    get core(): API.IBKCore { return this.parent.core; }
+    get modloader(): IModLoaderAPI { return this.parent.ModLoader; }
+    get handlers(): BkOnline_Handlers { return this.parent.Handle; }
+
+    constructor(parent: Main.BkOnline) { this.parent = parent; }
+
+    init() { }
+    
+    // #################################################
+    // ##  Utility Functions
+    // #################################################
+
+    log(input: string) {
+        if (this.parent.config.print_net_server)
+            this.modloader.logger.info('[Server] ' + input);
+    }
+
+    sDB(lobby: string): Net.DatabaseServer {
+        return this.modloader.lobbyManager.getLobbyStorage(lobby, this.parent);
+    }
+
+    // #################################################
+    // ##  Primary Events
+    // #################################################
+
+    @EventHandler(EventsServer.ON_LOBBY_CREATE)
+    onServer_LobbyCreate(lobby: string) {
+        this.modloader.lobbyManager.createLobbyStorage(
+            lobby,
+            this.parent,
+            new Net.DatabaseServer()
+        );
+    }
+
+    @EventHandler(EventsServer.ON_LOBBY_JOIN)
+    onServer_LobbyJoin(evt: EventServerJoined) {
+        let sDB = this.sDB(evt.lobby);
+        sDB.players[evt.player.uuid] = -1;
+        sDB.playerInstances[evt.player.uuid] = evt.player;
+    }
+
+    @EventHandler(EventsServer.ON_LOBBY_LEAVE)
+    onServer_LobbyLeave(evt: EventServerLeft) {
+        let sDB = this.sDB(evt.lobby);
+        delete sDB.players[evt.player.uuid];
+        delete sDB.playerInstances[evt.player.uuid];
+    }
+
+    // #################################################
+    // ##  Server Receive Packets
+    // #################################################
+
+    @ServerNetworkHandler('Request_Storage')
+    onServer_RequestStorage(packet: Packet): void {
+        this.log('Sending: {Lobby Storage}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        let pData = new Net.SyncStorage(
+            packet.lobby,
+            sDB.flagsGame,
+            sDB.flagsHoneycomb,
+            sDB.flagsJiggy,
+            sDB.flagsToken,
+            sDB.noteTotals,
+            sDB.jigsawsCompleted,
+            sDB.levelData,
+            sDB.levelEvents,
+            sDB.moves
+        );
+        this.modloader.serverSide.sendPacketToSpecificPlayer(pData, packet.player);
+    }
+
+    @ServerNetworkHandler('SyncGameFlags')
+    onServer_SyncGameFlags(packet: Net.SyncBuffered) {
+        this.log('Received: {Game Flags}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        // Detect Changes
+        if (!this.handlers.merge_bits(sDB.flagsGame, packet.value)) return;
+
+        let pData = new Net.SyncBuffered(packet.lobby, 'SyncGameFlags', sDB.flagsGame, true);
+        this.modloader.serverSide.sendPacket(pData);
+
+        this.log('Updated: {Game Flags}');
+    }
+
+    @ServerNetworkHandler('SyncHoneyCombFlags')
+    onServer_SyncHoneyCombFlags(packet: Net.SyncBuffered) {
+        this.log('Received: {HoneyComb Flags}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        // Detect Changes
+        if (!this.handlers.merge_bits(sDB.flagsHoneycomb, packet.value)) return;
+
+        let pData = new Net.SyncBuffered(packet.lobby, 'SyncHoneyCombFlags', sDB.flagsHoneycomb, true);
+        this.modloader.serverSide.sendPacket(pData);
+
+        this.log('Updated: {HoneyComb Flags}');
+    }
+
+    @ServerNetworkHandler('SyncJiggyFlags')
+    onServer_SyncJiggyFlags(packet: Net.SyncBuffered) {
+        this.log('Received: {Jiggy Flags}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        // Detect Changes
+        if (!this.handlers.merge_bits(sDB.flagsJiggy, packet.value)) return;
+
+        let pData = new Net.SyncBuffered(packet.lobby, 'SyncJiggyFlags', sDB.flagsJiggy, true);
+        this.modloader.serverSide.sendPacket(pData);
+
+        this.log('Updated: {Jiggy Flags}');
+    }
+
+    @ServerNetworkHandler('SyncMoves')
+    onServer_SyncMoves(packet: Net.SyncNumbered) {
+        this.log('Received: {Move Flags}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        if (sDB.moves === packet.value) return;
+        sDB.moves |= packet.value;
+
+        let pData = new Net.SyncNumbered(packet.lobby, 'SyncMoves', sDB.moves, true);
+        this.modloader.serverSide.sendPacket(pData);
+
+        this.log('Updated: {Move Flags}');
+    }
+
+    @ServerNetworkHandler('SyncMumboTokenFlags')
+    onServer_SyncMumboTokenFlags(packet: Net.SyncBuffered) {
+        this.log('Received: {Mumbo Token Flags}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        // Detect Changes
+        if (!this.handlers.merge_bits(sDB.flagsToken, packet.value)) return;
+
+        let pData = new Net.SyncBuffered(packet.lobby, 'SyncMumboTokenFlags', sDB.flagsToken, true);
+        this.modloader.serverSide.sendPacket(pData);
+
+        this.log('Updated: {Mumbo Token Flags}');
+    }
+
+    @ServerNetworkHandler('SyncNoteTotals')
+    onServer_SyncSyncNoteTotals(packet: Net.SyncBuffered) {
+        this.log('Received: {Note Totals}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        let data: Buffer = sDB.noteTotals;
+        let count: number = data.byteLength;
+        let i = 0;
+        let needUpdate = false;
+
+        for (i = 0; i < count; i++) {
+            if (data[i] === packet.value[i]) continue;
+            data[i] = Math.max(data[i], packet.value[i]);
+            if (data[i] > 100) data[i] = 100;
+            needUpdate = true;
+        }
+
+        if (!needUpdate) return;
+
+        sDB.noteTotals = data;
+
+        let pData = new Net.SyncBuffered(packet.lobby, 'SyncNoteTotals', data, true);
+        this.modloader.serverSide.sendPacket(pData);
+
+        this.log('Updated: {Note Totals}');
+    }
+
+    @ServerNetworkHandler('SyncJigsaws')
+    onServer_SyncJigsaws(packet: Net.SyncBuffered) {
+        this.log('Received: {Jigsaws Completion}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        let data: Buffer = sDB.jigsawsCompleted;
+        let count: number = data.byteLength;
+        let i = 0;
+        let needUpdate = false;
+
+        for (i = 0; i < count; i++) {
+            if (data[i] >= packet.value[i]) continue;
+            if (packet.value[i] > 0) data[i] = 1;
+            needUpdate = true;
+        }
+
+        if (!needUpdate) return;
+
+        sDB.jigsawsCompleted = data;
+
+        let pData = new Net.SyncBuffered(packet.lobby, 'SyncJigsaws', data, true);
+        this.modloader.serverSide.sendPacket(pData);
+
+        this.log('Updated: {Jigsaws Completion}');
+    }
+
+    @ServerNetworkHandler('SyncLevelEvents')
+    onServer_SyncLevelEvents(packet: Net.SyncNumbered) {
+        this.log('Received: {Level Events}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        if (sDB.levelEvents === packet.value) return;
+        sDB.levelEvents |= packet.value;
+
+        let pData = new Net.SyncNumbered(packet.lobby, 'SyncLevelEvents', sDB.levelEvents, true);
+        this.modloader.serverSide.sendPacket(pData);
+
+        this.log('Updated: {Level Events}');
+    }
+
+    // Puppet Tracking
+
+    @ServerNetworkHandler('SyncLocation')
+    onServer_SyncLocation(packet: Net.SyncLocation) {
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        let pMsg = 'Player[' + packet.player.nickname + ']';
+        let lMsg = 'Level[' + API.LevelType[packet.level] + ']';
+        let sMsg = 'Scene[' + API.SceneType[packet.scene] + ']';
+        sDB.players[packet.player.uuid] = packet.scene;
+        this.log('Received: {Player Scene}');
+        this.log('Updated: ' + pMsg + ' to ' + sMsg + ' of ' + lMsg);
+
+        if (packet.level === API.LevelType.UNKNOWN ||
+            packet.scene === API.SceneType.UNKNOWN) return;
+
+        this.handlers.check_db_instance(sDB, packet.level, packet.scene);
+    }
+
+    @ServerNetworkHandler('SyncPuppet')
+    onServer_SyncPuppet(packet: Net.SyncPuppet) {
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        Object.keys(sDB.players).forEach((key: string) => {
+            if (sDB.players[key] !== sDB.players[packet.player.uuid]) {
+                return;
+            }
+
+            if (!sDB.playerInstances.hasOwnProperty(key)) return;
+            if (sDB.playerInstances[key].uuid === packet.player.uuid) {
+                return;
+            }
+
+            this.modloader.serverSide.sendPacketToSpecificPlayer(
+                packet,
+                sDB.playerInstances[key]
+            );
+        });
+    }
+
+    // Level Tracking
+
+    @ServerNetworkHandler('SyncJinjos')
+    onServer_SyncJinjos(packet: Net.SyncLevelNumbered) {
+        this.log('Received: {Jinjo}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        let level = packet.level;
+
+        // Ensure we have this level/scene data!
+        this.handlers.check_db_instance(sDB, level, 0);
+
+        let map = sDB.levelData[level];
+        if (map.jinjos === packet.value) return;
+        map.jinjos |= packet.value;
+
+        // Check Jinjo Count
+        if (sDB.levelData[level].jinjos === 0x1f) {
+            // Set level specific jiggy flag
+            let offset = 0;
+
+            switch (packet.level) {
+                case API.LevelType.MUMBOS_MOUNTAIN:
+                    offset = 0x01;
+                    break;
+                case API.LevelType.TREASURE_TROVE_COVE:
+                    offset = 0x0b;
+                    break;
+                case API.LevelType.CLANKERS_CAVERN:
+                    offset = 0x15;
+                    break;
+                case API.LevelType.BUBBLE_GLOOP_SWAMP:
+                    offset = 0x1f;
+                    break;
+                case API.LevelType.FREEZEEZY_PEAK:
+                    offset = 0x29;
+                    break;
+                case API.LevelType.GOBEYS_VALEY:
+                    offset = 0x3d;
+                    break;
+                case API.LevelType.CLICK_CLOCK_WOODS:
+                    offset = 0x47;
+                    break;
+                case API.LevelType.RUSTY_BUCKET_BAY:
+                    offset = 0x51;
+                    break;
+                case API.LevelType.MAD_MONSTER_MANSION:
+                    offset = 0x5b;
+                    break;
+            }
+
+            sDB.flagsJiggy[Math.floor(offset / 8)] |= 1 << (offset % 8);
+            let pData = new Net.SyncBuffered(packet.lobby, 'SyncJiggyFlags', sDB.flagsJiggy, true);
+            this.modloader.serverSide.sendPacket(pData);
+        }
+
+        let pData = new Net.SyncLevelNumbered(
+            packet.lobby,
+            'SyncJinjos',
+            level,
+            map.jinjos,
+            true
+        );
+        this.modloader.serverSide.sendPacket(pData);
+
+        this.log('Updated: {Jinjo}');
+    }
+
+    @ServerNetworkHandler('SyncObjectNotes')
+    onServer_SyncObjectNotes(packet: Net.SyncLevelNumbered) {
+        this.log('Received: {Level Note Count}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        let level = packet.level;
+
+        // Ensure we have this level/scene data!
+        this.handlers.check_db_instance(sDB, level, 0);
+
+        let map = sDB.levelData[level];
+        if (map.onotes >= packet.value) return;
+        map.onotes = packet.value;
+
+        let pData = new Net.SyncLevelNumbered(packet.lobby, 'SyncObjectNotes', level, map.onotes, true);
+        this.modloader.serverSide.sendPacket(pData);
+
+        this.log('Updated: {Level Note Count}');
+    }
+
+    @ServerNetworkHandler('SyncVoxelNotes')
+    onServer_SyncVoxelNotes(packet: Net.SyncVoxelNotes) {
+        this.log('Received: {Level Note Count}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        let level = packet.level;
+        let scene = packet.scene;
+
+        // Ensure we have this level/scene data!
+        this.handlers.check_db_instance(sDB, level, scene);
+
+        let map = sDB.levelData[level].scene[scene];
+        let i = 0;
+        let needsUpdate = false;
+
+        for (i = 0; i < packet.notes.length; i++) {
+            if (!map.notes.includes(packet.notes[i])) {
+                map.notes.push(packet.notes[i]);
+                needsUpdate = true;
+            }
+        }
+
+        if (!needsUpdate) return;
+
+        let pData = new Net.SyncVoxelNotes(packet.lobby, level, scene, map.notes, true);
+        this.modloader.serverSide.sendPacket(pData);
+
+        this.log('Updated: {Level Note Count}');
+    }
+}
