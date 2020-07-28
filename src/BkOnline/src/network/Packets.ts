@@ -134,3 +134,84 @@ export class SyncVoxelNotes extends Packet {
         this.notes = notes;
     }
 }
+
+export class SyncGold extends Packet {
+    level: number;
+    scene: number;
+    gold: number[];
+    constructor(
+        lobby: string,
+        level: number,
+        scene: number,
+        gold: number[],
+        persist: boolean
+    ) {
+        super('SyncGold', 'BkOnline', lobby, persist);
+        this.level = level;
+        this.scene = scene;
+        this.gold = gold;
+    }
+}
+
+export class SyncPresents extends Packet {
+    level: number;
+    scene: number;
+    presents: number[];
+    blue: boolean;
+    green: boolean;
+    red: boolean;
+    constructor(
+        lobby: string,
+        level: number,
+        scene: number,
+        presents: number[],
+        blue: boolean,
+        green: boolean,
+        red: boolean,
+        persist: boolean
+    ) {
+        super('SyncPresents', 'BkOnline', lobby, persist);
+        this.level = level;
+        this.scene = scene;
+        this.presents = presents;
+        this.blue = blue;
+        this.green = green;
+        this.red = red;
+    }
+}
+
+export class SyncCaterpillars extends Packet {
+    level: number;
+    scene: number;
+    caterpillars: number[];
+    constructor(
+        lobby: string,
+        level: number,
+        scene: number,
+        caterpillars: number[],
+        persist: boolean
+    ) {
+        super('SyncCaterpillars', 'BkOnline', lobby, persist);
+        this.level = level;
+        this.scene = scene;
+        this.caterpillars = caterpillars;
+    }
+}
+
+export class SyncAcorns extends Packet {
+    level: number;
+    scene: number;
+    acorns: number[];
+    constructor(
+        lobby: string,
+        level: number,
+        scene: number,
+        acorns: number[],
+        persist: boolean
+    ) {
+        super('SyncAcorns', 'BkOnline', lobby, persist);
+        this.level = level;
+        this.scene = scene;
+        this.acorns = acorns;
+    }
+}

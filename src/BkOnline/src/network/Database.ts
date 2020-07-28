@@ -32,10 +32,19 @@ export class LevelData {
     scene: any = {};
     onotes: number = 0;
     jinjos: number = 0;
+
+    // Level Specific
+    gold: number[] = new Array<number>();
+    presents: number[] = new Array<number>();
+    caterpillars: number[] = new Array<number>();
+    acorns: number[] = new Array<number>();
+
+    present_b: boolean = false;
+    present_g: boolean = false;
+    present_r: boolean = false;
 }
 
 export class SceneData {
-    items: number[] = new Array<number>();
     notes: number[] = new Array<number>();
     events: number = 0;
 }

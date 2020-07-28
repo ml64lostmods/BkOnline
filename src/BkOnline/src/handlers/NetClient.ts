@@ -304,4 +304,132 @@ export class BkOnline_Client {
 
         this.log('Updated: {Level Note Count}');
     }
+
+    @NetworkHandler('SyncGold')
+    onClient_SyncGold(packet: Net.SyncGold) {
+        this.log('Received: {Level Specific - Gold Bullions}');
+
+        let level = packet.level;
+        let scene = packet.scene;
+
+        // Ensure we have this level/scene data!
+        this.handlers.check_db_instance(this.parent.cDB, level, scene);
+
+        let map = this.parent.cDB.levelData[level];
+        let i = 0;
+        let needsUpdate = false;
+
+        for (i = 0; i < packet.gold.length; i++) {
+            if (!map.g.includes(packet.gold[i])) {
+                map.gold.push(packet.gold[i]);
+                needsUpdate = true;
+            }
+        }
+
+        if (!needsUpdate) return;
+
+        // Mark we need to delete the gold if in same scene!
+        if (this.parent.cDB.curScn === packet.scene) {
+            this.parent.cDB.delVoxels = true;
+        }
+
+        this.log('Updated: {Level Specific - Gold Bullions}');
+    }
+
+    @NetworkHandler('SyncPresents')
+    onClient_SyncPresents(packet: Net.SyncPresents) {
+        this.log('Received: {Level Specific - Presents}');
+
+        let level = packet.level;
+        let scene = packet.scene;
+
+        // Ensure we have this level/scene data!
+        this.handlers.check_db_instance(this.parent.cDB, level, scene);
+
+        let map = this.parent.cDB.levelData[level];
+        let i = 0;
+        let needsUpdate = false;
+
+        for (i = 0; i < packet.presents.length; i++) {
+            if (!map.presents.includes(packet.presents[i])) {
+                map.presents.push(packet.presents[i]);
+                needsUpdate = true;
+            }
+        }
+
+        if (!map.present_b !== packet.blue) map.present_b = map.present_b || packet.blue;
+        if (!map.present_g !== packet.green) map.present_g = map.present_g || packet.green;
+        if (!map.present_r !== packet.red) map.present_r = map.present_r || packet.red;
+
+        if (!needsUpdate) return;
+
+        // Mark we need to delete the gold if in same scene!
+        if (this.parent.cDB.curScn === packet.scene) {
+            this.parent.cDB.delVoxels = true;
+        }
+
+        this.log('Updated: {Level Specific - Presents}');
+    }
+
+    @NetworkHandler('SyncCaterpillars')
+    onClient_SyncCaterpillars(packet: Net.SyncCaterpillars) {
+        this.log('Received: {Level Specific - Caterpillars}');
+
+        let level = packet.level;
+        let scene = packet.scene;
+
+        // Ensure we have this level/scene data!
+        this.handlers.check_db_instance(this.parent.cDB, level, scene);
+
+        let map = this.parent.cDB.levelData[level];
+        let i = 0;
+        let needsUpdate = false;
+
+        for (i = 0; i < packet.caterpillars.length; i++) {
+            if (!map.g.includes(packet.caterpillars[i])) {
+                map.caterpillars.push(packet.caterpillars[i]);
+                needsUpdate = true;
+            }
+        }
+
+        if (!needsUpdate) return;
+
+        // Mark we need to delete the caterpillars if in same scene!
+        if (this.parent.cDB.curScn === packet.scene) {
+            this.parent.cDB.delVoxels = true;
+        }
+
+        this.log('Updated: {Level Specific - Caterpillars}');
+    }
+
+    @NetworkHandler('SyncAcorns')
+    onClient_SyncAcorns(packet: Net.SyncAcorns) {
+        this.log('Received: {Level Specific - Acorns}');
+
+        let level = packet.level;
+        let scene = packet.scene;
+
+        // Ensure we have this level/scene data!
+        this.handlers.check_db_instance(this.parent.cDB, level, scene);
+
+        let map = this.parent.cDB.levelData[level];
+        let i = 0;
+        let needsUpdate = false;
+
+        for (i = 0; i < packet.acorns.length; i++) {
+            if (!map.g.includes(packet.acorns[i])) {
+                map.acorns.push(packet.acorns[i]);
+                needsUpdate = true;
+            }
+        }
+
+        if (!needsUpdate) return;
+
+        // Mark we need to delete the acorns if in same scene!
+        if (this.parent.cDB.curScn === packet.scene) {
+            this.parent.cDB.delVoxels = true;
+        }
+
+        this.log('Updated: {Level Specific - Acorns}');
+    }
 }

@@ -390,4 +390,140 @@ export class BkOnline_Server {
 
         this.log('Updated: {Level Note Count}');
     }
+
+    @ServerNetworkHandler('SyncGold')
+    onServer_SyncGold(packet: Net.SyncGold) {
+        this.log('Received: {Level Specific - Gold Bullions}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        let level = packet.level;
+        let scene = packet.scene;
+
+        // Ensure we have this level/scene data!
+        this.handlers.check_db_instance(sDB, level, scene);
+
+        let map = sDB.levelData[level];
+        let i = 0;
+        let needsUpdate = false;
+
+        for (i = 0; i < packet.gold.length; i++) {
+            if (!map.gold.includes(packet.gold[i])) {
+                map.gold.push(packet.gold[i]);
+                needsUpdate = true;
+            }
+        }
+
+        if (!needsUpdate) return;
+
+        let pData = new Net.SyncGold(packet.lobby, level, scene, map.gold, true);
+        this.modloader.serverSide.sendPacket(pData);
+
+        this.log('Updated: {Level Specific - Gold Bullions}');
+    }
+
+    @ServerNetworkHandler('SyncPresents')
+    onServer_SyncPresents(packet: Net.SyncPresents) {
+        this.log('Received: {Level Specific - Presents}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        let level = packet.level;
+        let scene = packet.scene;
+
+        // Ensure we have this level/scene data!
+        this.handlers.check_db_instance(sDB, level, scene);
+
+        let map = sDB.levelData[level];
+        let i = 0;
+        let needsUpdate = false;
+
+        for (i = 0; i < packet.presents.length; i++) {
+            if (!map.presents.includes(packet.presents[i])) {
+                map.presents.push(packet.presents[i]);
+                needsUpdate = true;
+            }
+        }
+
+        if (!map.present_b !== packet.blue) map.present_b = map.present_b || packet.blue;
+        if (!map.present_g !== packet.green) map.present_g = map.present_g || packet.green;
+        if (!map.present_r !== packet.red) map.present_r = map.present_r || packet.red;
+
+        if (!needsUpdate) return;
+
+        let pData = new Net.SyncPresents(
+            packet.lobby,
+            level, scene,
+            map.presents,
+            map.blue,
+            map.green,
+            map.red,
+            true
+        );
+        this.modloader.serverSide.sendPacket(pData);
+
+        this.log('Updated: {Level Specific - Presents}');
+    }
+
+    @ServerNetworkHandler('SyncCaterpillars')
+    onServer_SyncCaterpillars(packet: Net.SyncCaterpillars) {
+        this.log('Received: {Level Specific - Caterpillars}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        let level = packet.level;
+        let scene = packet.scene;
+
+        // Ensure we have this level/scene data!
+        this.handlers.check_db_instance(sDB, level, scene);
+
+        let map = sDB.levelData[level];
+        let i = 0;
+        let needsUpdate = false;
+
+        for (i = 0; i < packet.caterpillars.length; i++) {
+            if (!map.caterpillars.includes(packet.caterpillars[i])) {
+                map.caterpillars.push(packet.caterpillars[i]);
+                needsUpdate = true;
+            }
+        }
+
+        if (!needsUpdate) return;
+
+        let pData = new Net.SyncCaterpillars(packet.lobby, level, scene, map.caterpillars, true);
+        this.modloader.serverSide.sendPacket(pData);
+
+        this.log('Updated: {Level Specific - Caterpillars}');
+    }
+
+    @ServerNetworkHandler('SyncAcorns')
+    onServer_SyncAcorns(packet: Net.SyncAcorns) {
+        this.log('Received: {Level Specific - Acorns}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        let level = packet.level;
+        let scene = packet.scene;
+
+        // Ensure we have this level/scene data!
+        this.handlers.check_db_instance(sDB, level, scene);
+
+        let map = sDB.levelData[level];
+        let i = 0;
+        let needsUpdate = false;
+
+        for (i = 0; i < packet.acorns.length; i++) {
+            if (!map.acorns.includes(packet.acorns[i])) {
+                map.acorns.push(packet.acorns[i]);
+                needsUpdate = true;
+            }
+        }
+
+        if (!needsUpdate) return;
+
+        let pData = new Net.SyncAcorns(packet.lobby, level, scene, map.acorns, true);
+        this.modloader.serverSide.sendPacket(pData);
+
+        this.log('Updated: {Level Specific - Acorns}');
+    }
 }

@@ -69,6 +69,7 @@ export class BkOnline_Handlers {
         // Order-Specific Handlers
         this.handle_permanence_counts();
         this.handle_note_totals(bufData!, bufStorage!);
+        // this.handle_level_specific_items(); // Experimental
 
         // Force Despawn Code
         if (transitState !== 0) return;
@@ -183,7 +184,7 @@ export class BkOnline_Handlers {
 
         actors.forEach((id: number)=>{
             switch (id) {
-                case 0x06d6: // Notes
+                case API.ActorIdType.NOTE:
                     this.parent.cDB.oNoteCount += 1;
                     if (this.parent.cDB.levelData[level].onotes < this.parent.cDB.oNoteCount) {
                         this.parent.cDB.levelData[level].onotes = this.parent.cDB.oNoteCount;
@@ -191,27 +192,27 @@ export class BkOnline_Handlers {
                     }
                     break;
 
-                case 0x03C0: // Blue Jinjo
+                case API.ActorIdType.JINJO_BLUE:
                     this.parent.cDB.levelData[level].jinjos |= 1 << 0;
                     foundJinjo = true;
                     break;
 
-                case 0x03C2: // Green Jinjo
+                case API.ActorIdType.JINJO_GREEN:
                     this.parent.cDB.levelData[level].jinjos |= 1 << 1;
                     foundJinjo = true;
                     break;
 
-                case 0x03BC: // Orange Jinjo
+                case API.ActorIdType.JINJO_ORANGE:
                     this.parent.cDB.levelData[level].jinjos |= 1 << 2;
                     foundJinjo = true;
                     break;
 
-                case 0x03C1: // Pink Jinjo
+                case API.ActorIdType.JINJO_PINK:
                     this.parent.cDB.levelData[level].jinjos |= 1 << 3;
                     foundJinjo = true;
                     break;
 
-                case 0x03BB: // Yellow Jinjo
+                case API.ActorIdType.JINJO_YELLOW:
                     this.parent.cDB.levelData[level].jinjos |= 1 << 4;
                     foundJinjo = true;
                     break;
@@ -247,17 +248,69 @@ export class BkOnline_Handlers {
         let scene = this.parent.cDB.curScn;
         let name = '';
         let foundNotes = false;
+        let foundGold = false;
+        let foundPresents = false;
+        let foundCaterpillars = false;
+        let foundAcorns = false;
 
         voxels.forEach((ptr: number)=>{
             switch (this.modloader.emulator.rdramRead16(ptr)) {
-                case 0x1640: // Notes
-                    name += "x[" + this.modloader.emulator.rdramRead16(ptr + 0x04) +
-                            "]y[" + this.modloader.emulator.rdramRead16(ptr + 0x06) +
-                            "]z[" + this.modloader.emulator.rdramRead16(ptr + 0x08) + "]";
-
+                case API.VoxelIdType.NOTE:
+                    name = this.get_voxel_name(ptr);
                     if (!this.parent.cDB.levelData[level].scene[scene].notes.includes(name)) {
                         this.parent.cDB.levelData[level].scene[scene].notes.push(name);
                         foundNotes = true;
+                    }
+                    break;
+
+                case API.VoxelIdType.GOLD_BULLION:
+                    name = this.get_voxel_name(ptr);
+                    if (!this.parent.cDB.levelData[level].gold.includes(name)) {
+                        this.parent.cDB.levelData[level].gold.push(name);
+                        foundGold = true;
+                    }
+                    break;
+
+                case API.VoxelIdType.PRESENT_BLUE:
+                    name = this.get_voxel_name(ptr);
+                    if (!this.parent.cDB.levelData[level].presents.includes(name)) {
+                        this.parent.cDB.levelData[level].presents.push(name);
+                        this.parent.cDB.levelData[level].present_b = true;
+                        foundPresents = true;
+                    }
+                    break;
+                
+                case API.VoxelIdType.PRESENT_GREEN:
+                    name = this.get_voxel_name(ptr);
+                    if (!this.parent.cDB.levelData[level].presents.includes(name)) {
+                        this.parent.cDB.levelData[level].presents.push(name);
+                        this.parent.cDB.levelData[level].present_g = true;
+                        foundPresents = true;
+                    }
+                    break;
+                
+                case API.VoxelIdType.PRESENT_RED:
+                    name = this.get_voxel_name(ptr);
+                    if (!this.parent.cDB.levelData[level].presents.includes(name)) {
+                        this.parent.cDB.levelData[level].presents.push(name);
+                        this.parent.cDB.levelData[level].present_r = true;
+                        foundPresents = true;
+                    }
+                    break;
+                
+                case API.VoxelIdType.CATERPILLAR:
+                    name = this.get_voxel_name(ptr);
+                    if (!this.parent.cDB.levelData[level].caterpillars.includes(name)) {
+                        this.parent.cDB.levelData[level].caterpillars.push(name);
+                        foundCaterpillars = true;
+                    }
+                    break;
+                
+                case API.VoxelIdType.ACORN:
+                    name = this.get_voxel_name(ptr);
+                    if (!this.parent.cDB.levelData[level].acorns.includes(name)) {
+                        this.parent.cDB.levelData[level].acorns.push(name);
+                        foundAcorns = true;
                     }
                     break;
                 }
@@ -274,6 +327,63 @@ export class BkOnline_Handlers {
 
             this.modloader.clientSide.sendPacket(pData);
         }
+
+        if (foundGold) {
+            let pData = new Net.SyncGold(
+                this.modloader.clientLobby,
+                level,
+                scene,
+                this.parent.cDB.levelData[level].gold,
+                false
+            );
+
+            this.modloader.clientSide.sendPacket(pData);
+        }
+
+        if (foundPresents) {
+            let pData = new Net.SyncPresents(
+                this.modloader.clientLobby,
+                level,
+                scene,
+                this.parent.cDB.levelData[level].presents,
+                this.parent.cDB.levelData[level].present_b,
+                this.parent.cDB.levelData[level].present_g,
+                this.parent.cDB.levelData[level].present_r,
+                false
+            );
+
+            this.modloader.clientSide.sendPacket(pData);
+        }
+
+        if (foundCaterpillars) {
+            let pData = new Net.SyncCaterpillars(
+                this.modloader.clientLobby,
+                level,
+                scene,
+                this.parent.cDB.levelData[level].caterpillars,
+                false
+            );
+
+            this.modloader.clientSide.sendPacket(pData);
+        }
+
+        if (foundAcorns) {
+            let pData = new Net.SyncAcorns(
+                this.modloader.clientLobby,
+                level,
+                scene,
+                this.parent.cDB.levelData[level].acorns,
+                false
+            );
+
+            this.modloader.clientSide.sendPacket(pData);
+        }
+    }
+
+    get_voxel_name(ptr: number): string {
+        return this.modloader.emulator.rdramRead16(ptr + 0x04) + "|" +
+               this.modloader.emulator.rdramRead16(ptr + 0x06) + "|" +
+               this.modloader.emulator.rdramRead16(ptr + 0x08);
     }
 
     // #################################################
@@ -1000,6 +1110,26 @@ export class BkOnline_Handlers {
         this.modloader.clientSide.sendPacket(pData);
     }
 
+    handle_level_specific_items() {
+        // Initializers
+        let level = this.parent.cDB.curLvl;
+        
+        // Detect Changes
+        this.core.save.inventory.gold_bullions = this.parent.cDB.levelData[level].gold.length;
+
+        if (this.parent.cDB.levelData[level].present_b)
+            this.core.save.inventory.present_blue = 1;
+        
+        if (this.parent.cDB.levelData[level].present_g)
+            this.core.save.inventory.present_green = 1;
+
+        if (this.parent.cDB.levelData[level].present_r)
+        this.core.save.inventory.present_red = 1;
+
+        this.core.save.inventory.caterpillar = this.parent.cDB.levelData[level].caterpillars.length;
+        this.core.save.inventory.acorn = this.parent.cDB.levelData[level].acorns.length;
+    }
+
     handle_moves() {
         // Don't force sync moves on this map!
         if (this.parent.cDB.curScn === API.SceneType.GL_FURNACE_FUN) return;
@@ -1062,14 +1192,15 @@ export class BkOnline_Handlers {
 
         // Dont update while these cutscenes are active!
         if (
+            (evt & API.EventLevelBMP.CUTSCENE_FOOTWEAR) ||
             (evt & API.EventLevelBMP.CUTSCENE_MM_OPENING) ||
             (evt & API.EventLevelBMP.CUTSCENE_TTC_OPENING) ||
             (evt & API.EventLevelBMP.CUTSCENE_CC_OPENING) ||
             (evt & API.EventLevelBMP.CUTSCENE_BGS_OPENING) ||
-            (evt & (API.EventLevelBMP.CUTSCENE_RBB_ENGINE_ROOM_RIGHT << 24)) ||
-            (evt & (API.EventLevelBMP.CUTSCENE_RBB_ENGINE_ROOM_LEFT << 24)) ||
-            (evt & (API.EventLevelBMP.CUTSCENE_TTC_SANDCASTLE_WATER_LOWERED << 24)) ||
-            (evt & (API.EventLevelBMP.CUTSCENE_GV_MOTE_FILLED_CUTSCENE << 24))
+            (evt & (API.EventLevelBMP.CUTSCENE_RBB_ENGINE_ROOM_RIGHT)) ||
+            (evt & (API.EventLevelBMP.CUTSCENE_RBB_ENGINE_ROOM_LEFT)) ||
+            (evt & (API.EventLevelBMP.CUTSCENE_TTC_SANDCASTLE_WATER_LOWERED)) ||
+            (evt & (API.EventLevelBMP.CUTSCENE_GV_MOTE_FILLED_CUTSCENE))
         ) return;
 
         this.parent.cDB.levelEvents = evt;
@@ -1295,20 +1426,85 @@ export class BkOnline_Handlers {
         let name = '';
 
         switch (this.modloader.emulator.rdramRead16(ptr)) {
-            case 0x1640: // Notes
+            case API.VoxelIdType.NOTE:
                 // Total overrides
                 if (this.parent.cDB.noteTotals[level] === 0x64) {
                     this.modloader.emulator.rdramWrite8(ptr + 0x0B, 0x00);
                 } else {
-                    name += "x[" + this.modloader.emulator.rdramRead16(ptr + 0x04) +
-                    "]y[" + this.modloader.emulator.rdramRead16(ptr + 0x06) +
-                    "]z[" + this.modloader.emulator.rdramRead16(ptr + 0x08) + "]";
+                    name = this.get_voxel_name(ptr);
+
                     // We have this item, despawn it
                     if (this.parent.cDB.levelData[level].scene[scene].notes.includes(name)) {
                         this.mod_voxel(ptr, false);
                     } else { // We don't have this, make it visible again!
                         this.mod_voxel(ptr, true);
                     }
+                }
+                break;
+            
+            case API.VoxelIdType.GOLD_BULLION:
+                name = this.get_voxel_name(ptr);
+
+                // We have this item, despawn it
+                if (this.parent.cDB.levelData[level].gold.includes(name)) {
+                    this.mod_voxel(ptr, false);
+                } else { // We don't have this, make it visible again!
+                    this.mod_voxel(ptr, true);
+                }
+                break;
+
+            case API.VoxelIdType.PRESENT_BLUE:
+                name = this.get_voxel_name(ptr);
+                
+                // We have this item, despawn it
+                if (this.parent.cDB.levelData[level].presents.includes(name)) {
+                    this.mod_voxel(ptr, false);
+                } else { // We don't have this, make it visible again!
+                    this.mod_voxel(ptr, true);
+                }
+                break;
+            
+            case API.VoxelIdType.PRESENT_GREEN:
+                name = this.get_voxel_name(ptr);
+                
+                // We have this item, despawn it
+                if (this.parent.cDB.levelData[level].presents.includes(name)) {
+                    this.mod_voxel(ptr, false);
+                } else { // We don't have this, make it visible again!
+                    this.mod_voxel(ptr, true);
+                }
+                break;
+            
+            case API.VoxelIdType.PRESENT_RED:
+                name = this.get_voxel_name(ptr);
+                
+                // We have this item, despawn it
+                if (this.parent.cDB.levelData[level].presents.includes(name)) {
+                    this.mod_voxel(ptr, false);
+                } else { // We don't have this, make it visible again!
+                    this.mod_voxel(ptr, true);
+                }
+                break;
+            
+            case API.VoxelIdType.CATERPILLAR:
+                name = this.get_voxel_name(ptr);
+                
+                // We have this item, despawn it
+                if (this.parent.cDB.levelData[level].caterpillars.includes(name)) {
+                    this.mod_voxel(ptr, false);
+                } else { // We don't have this, make it visible again!
+                    this.mod_voxel(ptr, true);
+                }
+                break;
+            
+            case API.VoxelIdType.ACORN:
+                name = this.get_voxel_name(ptr);
+                
+                // We have this item, despawn it
+                if (this.parent.cDB.levelData[level].acorns.includes(name)) {
+                    this.mod_voxel(ptr, false);
+                } else { // We don't have this, make it visible again!
+                    this.mod_voxel(ptr, true);
                 }
                 break;
         }
