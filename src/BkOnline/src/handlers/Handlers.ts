@@ -53,8 +53,10 @@ export class BkOnline_Handlers {
         // General Setup/Handlers
         this.read_events();
         this.handle_puppets(scene, isLoading, inTransit, forceReload);
+        this.handle_logic();
 
         // Progress Flags Handlers
+        // this.handle_flags_cheat(bufData!, bufStorage!);
         this.handle_flags_game(bufData!, bufStorage!);
         this.handle_flags_honeycomb(bufData!, bufStorage!);
         this.handle_flags_jiggy(bufData!, bufStorage!);
@@ -519,6 +521,10 @@ export class BkOnline_Handlers {
         );
     }
 
+    handle_logic() {
+        this.core.save.inventory.lives = 1;
+    }
+
     handle_puzzle_count(bufData: Buffer, bufStorage: Buffer) {
         // Initializers
         let pData: Net.SyncBuffered;
@@ -527,61 +533,17 @@ export class BkOnline_Handlers {
 
         // Count puzzles currently slotted
         bufStorage = this.parent.cDB.jigsawsCompleted;
-        let count_mm: number = this.count_flags(
-            bufData,
-            API.GameBMP.PIECES_IN_PUZZLE_MM_0,
-            1
-        );
-        let count_ttc: number = this.count_flags(
-            bufData,
-            API.GameBMP.PIECES_IN_PUZZLE_TTC_0,
-            2
-        );
-        let count_cc: number = this.count_flags(
-            bufData,
-            API.GameBMP.PIECES_IN_PUZZLE_CC_0,
-            3
-        );
-        let count_bgs: number = this.count_flags(
-            bufData,
-            API.GameBMP.PIECES_IN_PUZZLE_BGS_0,
-            3
-        );
-        let count_fp: number = this.count_flags(
-            bufData,
-            API.GameBMP.PIECES_IN_PUZZLE_FP_0,
-            4
-        );
-        let count_gv: number = this.count_flags(
-            bufData,
-            API.GameBMP.PIECES_IN_PUZZLE_GV_0,
-            4
-        );
-        let count_mmm: number = this.count_flags(
-            bufData,
-            API.GameBMP.PIECES_IN_PUZZLE_MMM_0,
-            4
-        );
-        let count_rbb: number = this.count_flags(
-            bufData,
-            API.GameBMP.PIECES_IN_PUZZLE_RBB_0,
-            4
-        );
-        let count_ccw: number = this.count_flags(
-            bufData,
-            API.GameBMP.PIECES_IN_PUZZLE_CCW_0,
-            4
-        );
-        let count_dog: number = this.count_flags(
-            bufData,
-            API.GameBMP.PIECES_IN_PUZZLE_DOG_0,
-            5
-        );
-        let count_dh: number = this.count_flags(
-            bufData,
-            API.GameBMP.PIECES_IN_PUZZLE_DH_0,
-            3
-        );
+        let count_mm: number = this.count_flags(bufData, API.GameBMP.PIECES_IN_PUZZLE_MM_0, 1);
+        let count_ttc: number = this.count_flags(bufData, API.GameBMP.PIECES_IN_PUZZLE_TTC_0, 2);
+        let count_cc: number = this.count_flags(bufData, API.GameBMP.PIECES_IN_PUZZLE_CC_0, 3);
+        let count_bgs: number = this.count_flags(bufData, API.GameBMP.PIECES_IN_PUZZLE_BGS_0, 3);
+        let count_fp: number = this.count_flags(bufData, API.GameBMP.PIECES_IN_PUZZLE_FP_0, 4);
+        let count_gv: number = this.count_flags(bufData, API.GameBMP.PIECES_IN_PUZZLE_GV_0, 4);
+        let count_mmm: number = this.count_flags(bufData, API.GameBMP.PIECES_IN_PUZZLE_MMM_0, 4);
+        let count_rbb: number = this.count_flags(bufData, API.GameBMP.PIECES_IN_PUZZLE_RBB_0, 4);
+        let count_ccw: number = this.count_flags(bufData, API.GameBMP.PIECES_IN_PUZZLE_CCW_0, 4);
+        let count_dog: number = this.count_flags(bufData, API.GameBMP.PIECES_IN_PUZZLE_DOG_0, 5);
+        let count_dh: number = this.count_flags(bufData, API.GameBMP.PIECES_IN_PUZZLE_DH_0, 3);
         needUpdate = false;
 
         // Handle new completed puzzles
@@ -690,6 +652,10 @@ export class BkOnline_Handlers {
             if (count_dh === 4 && bufStorage[10] !== 1) {
                 bufStorage[10] = 1;
                 needUpdate = true;
+
+                // Activate extra health
+                let count = this.modloader.utils.utilBitCountBuffer(bufData, 0, 0);
+                this.core.runtime.current_health = (count / 6 + 5) * 2;
             } else if (count_dh !== 4 && bufStorage[10] === 1) {
                 count_dh = 4;
                 this.set_flags(bufData, API.GameBMP.PIECES_IN_PUZZLE_DH_0, 3, 4);
@@ -793,6 +759,43 @@ export class BkOnline_Handlers {
         if (bufData[Math.floor(id / 8)] & (1 << (id % 8))) count += 25;
 
         this.parent.cDB.tokensSpent = count;
+    }
+
+    handle_flags_cheat(bufData: Buffer, bufStorage: Buffer) {
+        bufData = this.core.save.flags_cheat.get_all();
+        bufStorage = this.parent.cDB.flagsCheat;
+
+        // Detect Changes
+        let needUpdate = false;
+        if (bufData[0x0e] !== bufStorage[0x0e]) {
+            bufData[0x0e] &= bufStorage[0x0e];
+            this.core.save.flags_cheat.set(0x0e, bufData[0x0e]);
+            needUpdate = true;
+        }
+        if (bufData[0x0f] !== bufStorage[0x0f]) {
+            bufData[0x0f] &= bufStorage[0x0f];
+            this.core.save.flags_cheat.set(0x0f, bufData[0x0f]);
+            needUpdate = true;
+        }
+        if (bufData[0x12] !== bufStorage[0x12]) {
+            bufData[0x12] &= bufStorage[0x12];
+            this.core.save.flags_cheat.set(0x12, bufData[0x12]);
+            needUpdate = true;
+        }
+        if (bufData[0x13] !== bufStorage[0x13]) {
+            bufData[0x13] &= bufStorage[0x13];
+            this.core.save.flags_cheat.set(0x13, bufData[0x13]);
+            needUpdate = true;
+        }
+
+        if (!needUpdate) return;
+
+        // Save Changes
+        this.core.save.flags_cheat.set_all(bufData);
+        this.parent.cDB.flagsCheat = bufData;
+
+        let pData = new Net.SyncBuffered(this.modloader.clientLobby, 'SyncCheatFlags', bufData, false);
+        this.modloader.clientSide.sendPacket(pData);
     }
 
     handle_flags_game(bufData: Buffer, bufStorage: Buffer) {
@@ -1023,11 +1026,20 @@ export class BkOnline_Handlers {
     }
 
     handle_flags_honeycomb(bufData: Buffer, bufStorage: Buffer) {
+        // Dont sync until the animation completes
+        if (this.core.save.inventory.honeycombs === 6) return;
+
         bufData = this.core.save.flags_honeycomb.get_all();
         bufStorage = this.parent.cDB.flagsHoneycomb;
 
         // Detect Changes
-        if (!this.merge_bits(bufData, bufStorage)) return;
+        let needUpdate = this.merge_bits(bufData, bufStorage);
+        if (!needUpdate) {
+            // Animation fix
+            let count = this.modloader.utils.utilBitCountBuffer(bufData, 0, 0);
+            this.core.save.inventory.health_upgrades = count / 6;
+            return;
+        }
 
         // Save Changes
         this.core.save.flags_honeycomb.set_all(bufData);
@@ -1192,15 +1204,15 @@ export class BkOnline_Handlers {
 
         // Dont update while these cutscenes are active!
         if (
-            (evt & API.EventLevelBMP.CUTSCENE_FOOTWEAR) ||
-            (evt & API.EventLevelBMP.CUTSCENE_MM_OPENING) ||
-            (evt & API.EventLevelBMP.CUTSCENE_TTC_OPENING) ||
-            (evt & API.EventLevelBMP.CUTSCENE_CC_OPENING) ||
-            (evt & API.EventLevelBMP.CUTSCENE_BGS_OPENING) ||
-            (evt & (API.EventLevelBMP.CUTSCENE_RBB_ENGINE_ROOM_RIGHT)) ||
-            (evt & (API.EventLevelBMP.CUTSCENE_RBB_ENGINE_ROOM_LEFT)) ||
-            (evt & (API.EventLevelBMP.CUTSCENE_TTC_SANDCASTLE_WATER_LOWERED)) ||
-            (evt & (API.EventLevelBMP.CUTSCENE_GV_MOTE_FILLED_CUTSCENE))
+            (evt & (1 << API.EventLevelBMP.CUTSCENE_FOOTWEAR)) ||
+            (evt & (1 << API.EventLevelBMP.CUTSCENE_MM_OPENING)) ||
+            (evt & (1 << API.EventLevelBMP.CUTSCENE_TTC_OPENING)) ||
+            (evt & (1 << API.EventLevelBMP.CUTSCENE_CC_OPENING)) ||
+            (evt & (1 << API.EventLevelBMP.CUTSCENE_BGS_OPENING)) ||
+            (evt & (1 << API.EventLevelBMP.CUTSCENE_RBB_ENGINE_ROOM_RIGHT)) ||
+            (evt & (1 << API.EventLevelBMP.CUTSCENE_RBB_ENGINE_ROOM_LEFT)) ||
+            (evt & (1 << API.EventLevelBMP.CUTSCENE_TTC_SANDCASTLE_WATER_LOWERED)) ||
+            (evt & (1 << API.EventLevelBMP.CUTSCENE_GV_MOTE_FILLED_CUTSCENE))
         ) return;
 
         this.parent.cDB.levelEvents = evt;

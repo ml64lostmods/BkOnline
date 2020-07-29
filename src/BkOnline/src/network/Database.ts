@@ -3,6 +3,7 @@ export class Database {
     flagsHoneycomb: Buffer = Buffer.alloc(0x03);
     flagsJiggy: Buffer = Buffer.alloc(0x0d);
     flagsToken: Buffer = Buffer.alloc(0x10);
+    flagsCheat: Buffer = Buffer.alloc(0x19);
     noteTotals: Buffer = Buffer.alloc(0x0f);
     jigsawsCompleted: Buffer = Buffer.alloc(11);
     levelData: any = {};

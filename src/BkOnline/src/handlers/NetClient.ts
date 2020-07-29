@@ -77,6 +77,7 @@ export class BkOnline_Client {
     @NetworkHandler('SyncStorage')
     onClient_SyncStorage(packet: Net.SyncStorage): void {
         this.log('Received: {Lobby Storage}');
+        this.parent.cDB.flagsCheat = packet.flags_cheat;
         this.parent.cDB.flagsGame = packet.flags_game;
         this.parent.cDB.flagsHoneycomb = packet.flags_honeycomb;
         this.parent.cDB.flagsJiggy = packet.flags_jiggy;
@@ -86,6 +87,16 @@ export class BkOnline_Client {
         this.parent.cDB.levelData = packet.level_data;
         this.parent.cDB.levelEvents = packet.level_events;
         this.parent.cDB.moves = packet.moves;
+    }
+
+    @NetworkHandler('SyncCheatFlags')
+    onClient_SyncCheatFlags(packet: Net.SyncBuffered) {
+        this.log('Received: {Cheat Flags}');
+
+        // Detect Changes
+        if (!this.handlers.merge_bits(this.parent.cDB.flagsCheat, packet.value)) return;
+
+        this.log('Updated: {Cheat Flags}');
     }
 
     @NetworkHandler('SyncGameFlags')

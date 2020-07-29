@@ -2,6 +2,7 @@ import { Packet, UDPPacket } from 'modloader64_api/ModLoaderDefaultImpls';
 import * as PData from '../puppet/Instance';
 
 export class SyncStorage extends Packet {
+    flags_cheat: Buffer;
     flags_game: Buffer;
     flags_jiggy: Buffer;
     flags_honeycomb: Buffer;
@@ -13,6 +14,7 @@ export class SyncStorage extends Packet {
     moves: number;
     constructor(
         lobby: string,
+        flags_cheat: Buffer,
         flags_game: Buffer,
         flags_honeycomb: Buffer,
         flags_jiggy: Buffer,
@@ -24,6 +26,7 @@ export class SyncStorage extends Packet {
         moves: number
     ) {
         super('SyncStorage', 'BkOnline', lobby, false);
+        this.flags_cheat = flags_cheat;
         this.flags_game = flags_game;
         this.flags_honeycomb = flags_honeycomb;
         this.flags_jiggy = flags_jiggy;

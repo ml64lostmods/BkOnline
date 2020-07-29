@@ -70,6 +70,7 @@ export class BkOnline_Server {
 
         let pData = new Net.SyncStorage(
             packet.lobby,
+            sDB.flagsCheat,
             sDB.flagsGame,
             sDB.flagsHoneycomb,
             sDB.flagsJiggy,
@@ -81,6 +82,21 @@ export class BkOnline_Server {
             sDB.moves
         );
         this.modloader.serverSide.sendPacketToSpecificPlayer(pData, packet.player);
+    }
+
+    @ServerNetworkHandler('SyncCheatFlags')
+    onServer_SyncCheatFlags(packet: Net.SyncBuffered) {
+        this.log('Received: {Cheat Flags}');
+        let sDB = this.sDB(packet.lobby);
+        if (sDB === null) return;
+
+        // Detect Changes
+        if (!this.handlers.merge_bits(sDB.flagsCheat, packet.value)) return;
+
+        let pData = new Net.SyncBuffered(packet.lobby, 'SyncCheatFlags', sDB.flagsCheat, true);
+        this.modloader.serverSide.sendPacket(pData);
+
+        this.log('Updated: {Cheat Flags}');
     }
 
     @ServerNetworkHandler('SyncGameFlags')
