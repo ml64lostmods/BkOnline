@@ -70,16 +70,7 @@ export class BkOnline_Server {
 
         let pData = new Net.SyncStorage(
             packet.lobby,
-            sDB.flagsCheat,
-            sDB.flagsGame,
-            sDB.flagsHoneycomb,
-            sDB.flagsJiggy,
-            sDB.flagsToken,
-            sDB.noteTotals,
-            sDB.jigsawsCompleted,
-            sDB.levelData,
-            sDB.levelEvents,
-            sDB.moves
+            sDB.file
         );
         this.modloader.serverSide.sendPacketToSpecificPlayer(pData, packet.player);
     }
@@ -91,12 +82,12 @@ export class BkOnline_Server {
         if (sDB === null) return;
 
         // Detect Changes
-        if (!this.handlers.merge_bits(sDB.flagsCheat, packet.value)) return;
+        if (!this.handlers.merge_bits(sDB.file[packet.team].flagsCheat, packet.value)) return;
 
-        let pData = new Net.SyncBuffered(packet.lobby, 'SyncCheatFlags', sDB.flagsCheat, true);
+        let pData = new Net.SyncBuffered(packet.lobby, 'SyncCheatFlags', packet.team, sDB.file[packet.team].flagsCheat, true);
         this.modloader.serverSide.sendPacket(pData);
 
-        this.log('Updated: {Cheat Flags}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Cheat Flags}');
     }
 
     @ServerNetworkHandler('SyncGameFlags')
@@ -106,12 +97,12 @@ export class BkOnline_Server {
         if (sDB === null) return;
 
         // Detect Changes
-        if (!this.handlers.merge_bits(sDB.flagsGame, packet.value)) return;
+        if (!this.handlers.merge_bits(sDB.file[packet.team].flagsGame, packet.value)) return;
 
-        let pData = new Net.SyncBuffered(packet.lobby, 'SyncGameFlags', sDB.flagsGame, true);
+        let pData = new Net.SyncBuffered(packet.lobby, 'SyncGameFlags', packet.team, sDB.file[packet.team].flagsGame, true);
         this.modloader.serverSide.sendPacket(pData);
 
-        this.log('Updated: {Game Flags}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Game Flags}');
     }
 
     @ServerNetworkHandler('SyncHoneyCombFlags')
@@ -121,12 +112,12 @@ export class BkOnline_Server {
         if (sDB === null) return;
 
         // Detect Changes
-        if (!this.handlers.merge_bits(sDB.flagsHoneycomb, packet.value)) return;
+        if (!this.handlers.merge_bits(sDB.file[packet.team].flagsHoneycomb, packet.value)) return;
 
-        let pData = new Net.SyncBuffered(packet.lobby, 'SyncHoneyCombFlags', sDB.flagsHoneycomb, true);
+        let pData = new Net.SyncBuffered(packet.lobby, 'SyncHoneyCombFlags', packet.team, sDB.file[packet.team].flagsHoneycomb, true);
         this.modloader.serverSide.sendPacket(pData);
 
-        this.log('Updated: {HoneyComb Flags}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {HoneyComb Flags}');
     }
 
     @ServerNetworkHandler('SyncJiggyFlags')
@@ -136,12 +127,12 @@ export class BkOnline_Server {
         if (sDB === null) return;
 
         // Detect Changes
-        if (!this.handlers.merge_bits(sDB.flagsJiggy, packet.value)) return;
+        if (!this.handlers.merge_bits(sDB.file[packet.team].flagsJiggy, packet.value)) return;
 
-        let pData = new Net.SyncBuffered(packet.lobby, 'SyncJiggyFlags', sDB.flagsJiggy, true);
+        let pData = new Net.SyncBuffered(packet.lobby, 'SyncJiggyFlags', packet.team, sDB.file[packet.team].flagsJiggy, true);
         this.modloader.serverSide.sendPacket(pData);
 
-        this.log('Updated: {Jiggy Flags}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Jiggy Flags}');
     }
 
     @ServerNetworkHandler('SyncMoves')
@@ -150,13 +141,13 @@ export class BkOnline_Server {
         let sDB = this.sDB(packet.lobby);
         if (sDB === null) return;
 
-        if (sDB.moves === packet.value) return;
-        sDB.moves |= packet.value;
+        if (sDB.file[packet.team].moves === packet.value) return;
+        sDB.file[packet.team].moves |= packet.value;
 
-        let pData = new Net.SyncNumbered(packet.lobby, 'SyncMoves', sDB.moves, true);
+        let pData = new Net.SyncNumbered(packet.lobby, 'SyncMoves', packet.team, sDB.file[packet.team].moves, true);
         this.modloader.serverSide.sendPacket(pData);
 
-        this.log('Updated: {Move Flags}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Move Flags}');
     }
 
     @ServerNetworkHandler('SyncMumboTokenFlags')
@@ -166,12 +157,12 @@ export class BkOnline_Server {
         if (sDB === null) return;
 
         // Detect Changes
-        if (!this.handlers.merge_bits(sDB.flagsToken, packet.value)) return;
+        if (!this.handlers.merge_bits(sDB.file[packet.team].flagsToken, packet.value)) return;
 
-        let pData = new Net.SyncBuffered(packet.lobby, 'SyncMumboTokenFlags', sDB.flagsToken, true);
+        let pData = new Net.SyncBuffered(packet.lobby, 'SyncMumboTokenFlags', packet.team, sDB.file[packet.team].flagsToken, true);
         this.modloader.serverSide.sendPacket(pData);
 
-        this.log('Updated: {Mumbo Token Flags}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Mumbo Token Flags}');
     }
 
     @ServerNetworkHandler('SyncNoteTotals')
@@ -180,7 +171,7 @@ export class BkOnline_Server {
         let sDB = this.sDB(packet.lobby);
         if (sDB === null) return;
 
-        let data: Buffer = sDB.noteTotals;
+        let data: Buffer = sDB.file[packet.team].noteTotals;
         let count: number = data.byteLength;
         let i = 0;
         let needUpdate = false;
@@ -194,12 +185,12 @@ export class BkOnline_Server {
 
         if (!needUpdate) return;
 
-        sDB.noteTotals = data;
+        sDB.file[packet.team].noteTotals = data;
 
-        let pData = new Net.SyncBuffered(packet.lobby, 'SyncNoteTotals', data, true);
+        let pData = new Net.SyncBuffered(packet.lobby, 'SyncNoteTotals', packet.team, data, true);
         this.modloader.serverSide.sendPacket(pData);
 
-        this.log('Updated: {Note Totals}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Note Totals}');
     }
 
     @ServerNetworkHandler('SyncJigsaws')
@@ -208,7 +199,7 @@ export class BkOnline_Server {
         let sDB = this.sDB(packet.lobby);
         if (sDB === null) return;
 
-        let data: Buffer = sDB.jigsawsCompleted;
+        let data: Buffer = sDB.file[packet.team].jigsawsCompleted;
         let count: number = data.byteLength;
         let i = 0;
         let needUpdate = false;
@@ -221,12 +212,12 @@ export class BkOnline_Server {
 
         if (!needUpdate) return;
 
-        sDB.jigsawsCompleted = data;
+        sDB.file[packet.team].jigsawsCompleted = data;
 
-        let pData = new Net.SyncBuffered(packet.lobby, 'SyncJigsaws', data, true);
+        let pData = new Net.SyncBuffered(packet.lobby, 'SyncJigsaws', packet.team, data, true);
         this.modloader.serverSide.sendPacket(pData);
 
-        this.log('Updated: {Jigsaws Completion}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Jigsaws Completion}');
     }
 
     @ServerNetworkHandler('SyncLevelEvents')
@@ -235,13 +226,13 @@ export class BkOnline_Server {
         let sDB = this.sDB(packet.lobby);
         if (sDB === null) return;
 
-        if (sDB.levelEvents === packet.value) return;
-        sDB.levelEvents |= packet.value;
+        if (sDB.file[packet.team].levelEvents === packet.value) return;
+        sDB.file[packet.team].levelEvents |= packet.value;
 
-        let pData = new Net.SyncNumbered(packet.lobby, 'SyncLevelEvents', sDB.levelEvents, true);
+        let pData = new Net.SyncNumbered(packet.lobby, 'SyncLevelEvents', packet.team, sDB.file[packet.team].levelEvents, true);
         this.modloader.serverSide.sendPacket(pData);
 
-        this.log('Updated: {Level Events}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Level Events}');
     }
 
     // Puppet Tracking
@@ -261,7 +252,7 @@ export class BkOnline_Server {
         if (packet.level === API.LevelType.UNKNOWN ||
             packet.scene === API.SceneType.UNKNOWN) return;
 
-        this.handlers.check_db_instance(sDB, packet.level, packet.scene);
+        this.handlers.check_db_instance(sDB, packet.team, packet.level, packet.scene);
     }
 
     @ServerNetworkHandler('SyncPuppet')
@@ -297,14 +288,14 @@ export class BkOnline_Server {
         let level = packet.level;
 
         // Ensure we have this level/scene data!
-        this.handlers.check_db_instance(sDB, level, 0);
+        this.handlers.check_db_instance(sDB, packet.team, level, 0);
 
-        let map = sDB.levelData[level];
+        let map = sDB.file[packet.team].levelData[level];
         if (map.jinjos === packet.value) return;
         map.jinjos |= packet.value;
 
         // Check Jinjo Count
-        if (sDB.levelData[level].jinjos === 0x1f) {
+        if (sDB.file[packet.team].levelData[level].jinjos === 0x1f) {
             // Set level specific jiggy flag
             let offset = 0;
 
@@ -338,21 +329,22 @@ export class BkOnline_Server {
                     break;
             }
 
-            sDB.flagsJiggy[Math.floor(offset / 8)] |= 1 << (offset % 8);
-            let pData = new Net.SyncBuffered(packet.lobby, 'SyncJiggyFlags', sDB.flagsJiggy, true);
+            sDB.file[packet.team].flagsJiggy[Math.floor(offset / 8)] |= 1 << (offset % 8);
+            let pData = new Net.SyncBuffered(packet.lobby, 'SyncJiggyFlags', packet.team, sDB.file[packet.team].flagsJiggy, true);
             this.modloader.serverSide.sendPacket(pData);
         }
 
         let pData = new Net.SyncLevelNumbered(
             packet.lobby,
             'SyncJinjos',
+            packet.team,
             level,
             map.jinjos,
             true
         );
         this.modloader.serverSide.sendPacket(pData);
 
-        this.log('Updated: {Jinjo}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Jinjo}');
     }
 
     @ServerNetworkHandler('SyncObjectNotes')
@@ -364,16 +356,16 @@ export class BkOnline_Server {
         let level = packet.level;
 
         // Ensure we have this level/scene data!
-        this.handlers.check_db_instance(sDB, level, 0);
+        this.handlers.check_db_instance(sDB, packet.team, level, 0);
 
-        let map = sDB.levelData[level];
+        let map = sDB.file[packet.team].levelData[level];
         if (map.onotes >= packet.value) return;
         map.onotes = packet.value;
 
-        let pData = new Net.SyncLevelNumbered(packet.lobby, 'SyncObjectNotes', level, map.onotes, true);
+        let pData = new Net.SyncLevelNumbered(packet.lobby, 'SyncObjectNotes', packet.team, level, map.onotes, true);
         this.modloader.serverSide.sendPacket(pData);
 
-        this.log('Updated: {Level Note Count}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Level Note Count}');
     }
 
     @ServerNetworkHandler('SyncVoxelNotes')
@@ -386,9 +378,9 @@ export class BkOnline_Server {
         let scene = packet.scene;
 
         // Ensure we have this level/scene data!
-        this.handlers.check_db_instance(sDB, level, scene);
+        this.handlers.check_db_instance(sDB, packet.team, level, scene);
 
-        let map = sDB.levelData[level].scene[scene];
+        let map = sDB.file[packet.team].levelData[level].scene[scene];
         let i = 0;
         let needsUpdate = false;
 
@@ -401,10 +393,10 @@ export class BkOnline_Server {
 
         if (!needsUpdate) return;
 
-        let pData = new Net.SyncVoxelNotes(packet.lobby, level, scene, map.notes, true);
+        let pData = new Net.SyncVoxelNotes(packet.lobby, packet.team, level, scene, map.notes, true);
         this.modloader.serverSide.sendPacket(pData);
 
-        this.log('Updated: {Level Note Count}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Level Note Count}');
     }
 
     @ServerNetworkHandler('SyncGold')
@@ -417,9 +409,9 @@ export class BkOnline_Server {
         let scene = packet.scene;
 
         // Ensure we have this level/scene data!
-        this.handlers.check_db_instance(sDB, level, scene);
+        this.handlers.check_db_instance(sDB, packet.team, level, scene);
 
-        let map = sDB.levelData[level];
+        let map = sDB.file[packet.team].levelData[level];
         let i = 0;
         let needsUpdate = false;
 
@@ -432,10 +424,10 @@ export class BkOnline_Server {
 
         if (!needsUpdate) return;
 
-        let pData = new Net.SyncGold(packet.lobby, level, scene, map.gold, true);
+        let pData = new Net.SyncGold(packet.lobby, packet.team, level, scene, map.gold, true);
         this.modloader.serverSide.sendPacket(pData);
 
-        this.log('Updated: {Level Specific - Gold Bullions}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Level Specific - Gold Bullions}');
     }
 
     @ServerNetworkHandler('SyncPresents')
@@ -448,9 +440,9 @@ export class BkOnline_Server {
         let scene = packet.scene;
 
         // Ensure we have this level/scene data!
-        this.handlers.check_db_instance(sDB, level, scene);
+        this.handlers.check_db_instance(sDB, packet.team, level, scene);
 
-        let map = sDB.levelData[level];
+        let map = sDB.file[packet.team].levelData[level];
         let i = 0;
         let needsUpdate = false;
 
@@ -469,6 +461,7 @@ export class BkOnline_Server {
 
         let pData = new Net.SyncPresents(
             packet.lobby,
+            packet.team,
             level, scene,
             map.presents,
             map.blue,
@@ -478,7 +471,7 @@ export class BkOnline_Server {
         );
         this.modloader.serverSide.sendPacket(pData);
 
-        this.log('Updated: {Level Specific - Presents}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Level Specific - Presents}');
     }
 
     @ServerNetworkHandler('SyncCaterpillars')
@@ -491,9 +484,9 @@ export class BkOnline_Server {
         let scene = packet.scene;
 
         // Ensure we have this level/scene data!
-        this.handlers.check_db_instance(sDB, level, scene);
+        this.handlers.check_db_instance(sDB, packet.team, level, scene);
 
-        let map = sDB.levelData[level];
+        let map = sDB.file[packet.team].levelData[level];
         let i = 0;
         let needsUpdate = false;
 
@@ -506,10 +499,10 @@ export class BkOnline_Server {
 
         if (!needsUpdate) return;
 
-        let pData = new Net.SyncCaterpillars(packet.lobby, level, scene, map.caterpillars, true);
+        let pData = new Net.SyncCaterpillars(packet.lobby, packet.team, level, scene, map.caterpillars, true);
         this.modloader.serverSide.sendPacket(pData);
 
-        this.log('Updated: {Level Specific - Caterpillars}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Level Specific - Caterpillars}');
     }
 
     @ServerNetworkHandler('SyncAcorns')
@@ -522,9 +515,9 @@ export class BkOnline_Server {
         let scene = packet.scene;
 
         // Ensure we have this level/scene data!
-        this.handlers.check_db_instance(sDB, level, scene);
+        this.handlers.check_db_instance(sDB, packet.team, level, scene);
 
-        let map = sDB.levelData[level];
+        let map = sDB.file[packet.team].levelData[level];
         let i = 0;
         let needsUpdate = false;
 
@@ -537,9 +530,9 @@ export class BkOnline_Server {
 
         if (!needsUpdate) return;
 
-        let pData = new Net.SyncAcorns(packet.lobby, level, scene, map.acorns, true);
+        let pData = new Net.SyncAcorns(packet.lobby, packet.team, level, scene, map.acorns, true);
         this.modloader.serverSide.sendPacket(pData);
 
-        this.log('Updated: {Level Specific - Acorns}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Level Specific - Acorns}');
     }
 }

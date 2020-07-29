@@ -32,6 +32,9 @@ export class BkOnline_Handlers {
             return;
         }
 
+        // Global file - Set team
+        this.parent.cDB.team = this.core.runtime.get_current_profile();
+
         // Initializers
         let bufStorage: Buffer;
         let bufData: Buffer;
@@ -94,12 +97,14 @@ export class BkOnline_Handlers {
 
     @EventHandler(API.BkEvents.ON_SCENE_CHANGE)
     onSceneChange(scene: number, level: number) {
+        let team = this.parent.cDB.team;
+
         // Set global to current scene value
         this.parent.cDB.curScn = scene;
 
         // Alert scene change so puppet can despawn for other players
         if (scene === API.SceneType.UNKNOWN) {
-            this.modloader.clientSide.sendPacket(new Net.SyncLocation(this.modloader.clientLobby, 0, 0));
+            this.modloader.clientSide.sendPacket(new Net.SyncLocation(this.modloader.clientLobby, team, 0, 0));
             return;
         }
 
@@ -112,58 +117,58 @@ export class BkOnline_Handlers {
         }
 
         // Ensure we have this level/scene data!
-        this.check_db_instance(this.parent.cDB, level, scene);
+        this.check_db_instance(this.parent.cDB, team, level, scene);
 
         // Alert scene change!
-        this.modloader.clientSide.sendPacket(new Net.SyncLocation(this.modloader.clientLobby, level, scene));
+        this.modloader.clientSide.sendPacket(new Net.SyncLocation(this.modloader.clientLobby, team, level, scene));
         this.log('Moved to scene[' + API.SceneType[scene] + '].');
 
         // Remove completed jinjos from previous session!
-        if (this.parent.cDB.levelData[level].jinjos !== 0x1f) {
+        if (this.parent.cDB.file[team].levelData[level].jinjos !== 0x1f) {
             switch (level) {
                 case API.LevelType.MUMBOS_MOUNTAIN:
-                    if ((this.parent.cDB.flagsJiggy[0] & (1 << 1)) !== 0)
-                        this.parent.cDB.levelData[level].jinjos = 0x1f;
+                    if ((this.parent.cDB.file[team].flagsJiggy[0] & (1 << 1)) !== 0)
+                        this.parent.cDB.file[team].levelData[level].jinjos = 0x1f;
                     break;
 
                 case API.LevelType.TREASURE_TROVE_COVE:
-                    if ((this.parent.cDB.flagsJiggy[1] & (1 << 3)) !== 0)
-                        this.parent.cDB.levelData[level].jinjos = 0x1f;
+                    if ((this.parent.cDB.file[team].flagsJiggy[1] & (1 << 3)) !== 0)
+                        this.parent.cDB.file[team].levelData[level].jinjos = 0x1f;
                     break;
 
                 case API.LevelType.CLANKERS_CAVERN:
-                    if ((this.parent.cDB.flagsJiggy[2] & (1 << 5)) !== 0)
-                        this.parent.cDB.levelData[level].jinjos = 0x1f;
+                    if ((this.parent.cDB.file[team].flagsJiggy[2] & (1 << 5)) !== 0)
+                        this.parent.cDB.file[team].levelData[level].jinjos = 0x1f;
                     break;
 
                 case API.LevelType.BUBBLE_GLOOP_SWAMP:
-                    if ((this.parent.cDB.flagsJiggy[3] & (1 << 7)) !== 0)
-                        this.parent.cDB.levelData[level].jinjos = 0x1f;
+                    if ((this.parent.cDB.file[team].flagsJiggy[3] & (1 << 7)) !== 0)
+                        this.parent.cDB.file[team].levelData[level].jinjos = 0x1f;
                     break;
 
                 case API.LevelType.FREEZEEZY_PEAK:
-                    if ((this.parent.cDB.flagsJiggy[5] & (1 << 1)) !== 0)
-                        this.parent.cDB.levelData[level].jinjos = 0x1f;
+                    if ((this.parent.cDB.file[team].flagsJiggy[5] & (1 << 1)) !== 0)
+                        this.parent.cDB.file[team].levelData[level].jinjos = 0x1f;
                     break;
 
                 case API.LevelType.GOBEYS_VALEY:
-                    if ((this.parent.cDB.flagsJiggy[7] & (1 << 5)) !== 0)
-                        this.parent.cDB.levelData[level].jinjos = 0x1f;
+                    if ((this.parent.cDB.file[team].flagsJiggy[7] & (1 << 5)) !== 0)
+                        this.parent.cDB.file[team].levelData[level].jinjos = 0x1f;
                     break;
 
                 case API.LevelType.CLICK_CLOCK_WOODS:
-                    if ((this.parent.cDB.flagsJiggy[8] & (1 << 7)) !== 0)
-                        this.parent.cDB.levelData[level].jinjos = 0x1f;
+                    if ((this.parent.cDB.file[team].flagsJiggy[8] & (1 << 7)) !== 0)
+                        this.parent.cDB.file[team].levelData[level].jinjos = 0x1f;
                     break;
 
                 case API.LevelType.RUSTY_BUCKET_BAY:
-                    if ((this.parent.cDB.flagsJiggy[10] & (1 << 1)) !== 0)
-                        this.parent.cDB.levelData[level].jinjos = 0x1f;
+                    if ((this.parent.cDB.file[team].flagsJiggy[10] & (1 << 1)) !== 0)
+                        this.parent.cDB.file[team].levelData[level].jinjos = 0x1f;
                     break;
 
                 case API.LevelType.MAD_MONSTER_MANSION:
-                    if ((this.parent.cDB.flagsJiggy[11] & (1 << 3)) !== 0)
-                        this.parent.cDB.levelData[level].jinjos = 0x1f;
+                    if ((this.parent.cDB.file[team].flagsJiggy[11] & (1 << 3)) !== 0)
+                        this.parent.cDB.file[team].levelData[level].jinjos = 0x1f;
                     break;
             }
         }
@@ -180,6 +185,7 @@ export class BkOnline_Handlers {
     @EventHandler(API.BkEvents.ON_COLLIDE_ACTOR)
     onCollideActor(actors: Array<number>) {
         let pData: Net.SyncLevelNumbered;
+        let team = this.parent.cDB.team;
         let level = this.parent.cDB.curLvl;
         let foundJinjo = false;
         let foundNotes = false;
@@ -188,34 +194,34 @@ export class BkOnline_Handlers {
             switch (id) {
                 case API.ActorIdType.NOTE:
                     this.parent.cDB.oNoteCount += 1;
-                    if (this.parent.cDB.levelData[level].onotes < this.parent.cDB.oNoteCount) {
-                        this.parent.cDB.levelData[level].onotes = this.parent.cDB.oNoteCount;
+                    if (this.parent.cDB.file[team].levelData[level].onotes < this.parent.cDB.oNoteCount) {
+                        this.parent.cDB.file[team].levelData[level].onotes = this.parent.cDB.oNoteCount;
                         foundNotes = true;
                     }
                     break;
 
                 case API.ActorIdType.JINJO_BLUE:
-                    this.parent.cDB.levelData[level].jinjos |= 1 << 0;
+                    this.parent.cDB.file[team].levelData[level].jinjos |= 1 << 0;
                     foundJinjo = true;
                     break;
 
                 case API.ActorIdType.JINJO_GREEN:
-                    this.parent.cDB.levelData[level].jinjos |= 1 << 1;
+                    this.parent.cDB.file[team].levelData[level].jinjos |= 1 << 1;
                     foundJinjo = true;
                     break;
 
                 case API.ActorIdType.JINJO_ORANGE:
-                    this.parent.cDB.levelData[level].jinjos |= 1 << 2;
+                    this.parent.cDB.file[team].levelData[level].jinjos |= 1 << 2;
                     foundJinjo = true;
                     break;
 
                 case API.ActorIdType.JINJO_PINK:
-                    this.parent.cDB.levelData[level].jinjos |= 1 << 3;
+                    this.parent.cDB.file[team].levelData[level].jinjos |= 1 << 3;
                     foundJinjo = true;
                     break;
 
                 case API.ActorIdType.JINJO_YELLOW:
-                    this.parent.cDB.levelData[level].jinjos |= 1 << 4;
+                    this.parent.cDB.file[team].levelData[level].jinjos |= 1 << 4;
                     foundJinjo = true;
                     break;
             }
@@ -225,8 +231,9 @@ export class BkOnline_Handlers {
             pData = new Net.SyncLevelNumbered(
                 this.modloader.clientLobby,
                 'SyncJinjos',
+                team,
                 level,
-                this.parent.cDB.levelData[level].jinjos,
+                this.parent.cDB.file[team].levelData[level].jinjos,
                 false
             );
             this.modloader.clientSide.sendPacket(pData);
@@ -236,8 +243,9 @@ export class BkOnline_Handlers {
             pData = new Net.SyncLevelNumbered(
                 this.modloader.clientLobby,
                 'SyncObjectNotes',
+                team,
                 level,
-                this.parent.cDB.levelData[level].onotes,
+                this.parent.cDB.file[team].levelData[level].onotes,
                 false
             );
             this.modloader.clientSide.sendPacket(pData);
@@ -246,6 +254,7 @@ export class BkOnline_Handlers {
 
     @EventHandler(API.BkEvents.ON_COLLIDE_VOXEL)
     onCollideVoxel(voxels: Array<number>) {
+        let team = this.parent.cDB.team;
         let level = this.parent.cDB.curLvl;
         let scene = this.parent.cDB.curScn;
         let name = '';
@@ -259,59 +268,59 @@ export class BkOnline_Handlers {
             switch (this.modloader.emulator.rdramRead16(ptr)) {
                 case API.VoxelIdType.NOTE:
                     name = this.get_voxel_name(ptr);
-                    if (!this.parent.cDB.levelData[level].scene[scene].notes.includes(name)) {
-                        this.parent.cDB.levelData[level].scene[scene].notes.push(name);
+                    if (!this.parent.cDB.file[team].levelData[level].scene[scene].notes.includes(name)) {
+                        this.parent.cDB.file[team].levelData[level].scene[scene].notes.push(name);
                         foundNotes = true;
                     }
                     break;
 
                 case API.VoxelIdType.GOLD_BULLION:
                     name = this.get_voxel_name(ptr);
-                    if (!this.parent.cDB.levelData[level].gold.includes(name)) {
-                        this.parent.cDB.levelData[level].gold.push(name);
+                    if (!this.parent.cDB.file[team].levelData[level].gold.includes(name)) {
+                        this.parent.cDB.file[team].levelData[level].gold.push(name);
                         foundGold = true;
                     }
                     break;
 
                 case API.VoxelIdType.PRESENT_BLUE:
                     name = this.get_voxel_name(ptr);
-                    if (!this.parent.cDB.levelData[level].presents.includes(name)) {
-                        this.parent.cDB.levelData[level].presents.push(name);
-                        this.parent.cDB.levelData[level].present_b = true;
+                    if (!this.parent.cDB.file[team].levelData[level].presents.includes(name)) {
+                        this.parent.cDB.file[team].levelData[level].presents.push(name);
+                        this.parent.cDB.file[team].levelData[level].present_b = true;
                         foundPresents = true;
                     }
                     break;
                 
                 case API.VoxelIdType.PRESENT_GREEN:
                     name = this.get_voxel_name(ptr);
-                    if (!this.parent.cDB.levelData[level].presents.includes(name)) {
-                        this.parent.cDB.levelData[level].presents.push(name);
-                        this.parent.cDB.levelData[level].present_g = true;
+                    if (!this.parent.cDB.file[team].levelData[level].presents.includes(name)) {
+                        this.parent.cDB.file[team].levelData[level].presents.push(name);
+                        this.parent.cDB.file[team].levelData[level].present_g = true;
                         foundPresents = true;
                     }
                     break;
                 
                 case API.VoxelIdType.PRESENT_RED:
                     name = this.get_voxel_name(ptr);
-                    if (!this.parent.cDB.levelData[level].presents.includes(name)) {
-                        this.parent.cDB.levelData[level].presents.push(name);
-                        this.parent.cDB.levelData[level].present_r = true;
+                    if (!this.parent.cDB.file[team].levelData[level].presents.includes(name)) {
+                        this.parent.cDB.file[team].levelData[level].presents.push(name);
+                        this.parent.cDB.file[team].levelData[level].present_r = true;
                         foundPresents = true;
                     }
                     break;
                 
                 case API.VoxelIdType.CATERPILLAR:
                     name = this.get_voxel_name(ptr);
-                    if (!this.parent.cDB.levelData[level].caterpillars.includes(name)) {
-                        this.parent.cDB.levelData[level].caterpillars.push(name);
+                    if (!this.parent.cDB.file[team].levelData[level].caterpillars.includes(name)) {
+                        this.parent.cDB.file[team].levelData[level].caterpillars.push(name);
                         foundCaterpillars = true;
                     }
                     break;
                 
                 case API.VoxelIdType.ACORN:
                     name = this.get_voxel_name(ptr);
-                    if (!this.parent.cDB.levelData[level].acorns.includes(name)) {
-                        this.parent.cDB.levelData[level].acorns.push(name);
+                    if (!this.parent.cDB.file[team].levelData[level].acorns.includes(name)) {
+                        this.parent.cDB.file[team].levelData[level].acorns.push(name);
                         foundAcorns = true;
                     }
                     break;
@@ -321,9 +330,10 @@ export class BkOnline_Handlers {
         if (foundNotes) {
             let pData = new Net.SyncVoxelNotes(
                 this.modloader.clientLobby,
+                team,
                 level,
                 scene,
-                this.parent.cDB.levelData[level].scene[scene].notes,
+                this.parent.cDB.file[team].levelData[level].scene[scene].notes,
                 false
             );
 
@@ -333,9 +343,10 @@ export class BkOnline_Handlers {
         if (foundGold) {
             let pData = new Net.SyncGold(
                 this.modloader.clientLobby,
+                team,
                 level,
                 scene,
-                this.parent.cDB.levelData[level].gold,
+                this.parent.cDB.file[team].levelData[level].gold,
                 false
             );
 
@@ -345,12 +356,13 @@ export class BkOnline_Handlers {
         if (foundPresents) {
             let pData = new Net.SyncPresents(
                 this.modloader.clientLobby,
+                team,
                 level,
                 scene,
-                this.parent.cDB.levelData[level].presents,
-                this.parent.cDB.levelData[level].present_b,
-                this.parent.cDB.levelData[level].present_g,
-                this.parent.cDB.levelData[level].present_r,
+                this.parent.cDB.file[team].levelData[level].presents,
+                this.parent.cDB.file[team].levelData[level].present_b,
+                this.parent.cDB.file[team].levelData[level].present_g,
+                this.parent.cDB.file[team].levelData[level].present_r,
                 false
             );
 
@@ -360,9 +372,10 @@ export class BkOnline_Handlers {
         if (foundCaterpillars) {
             let pData = new Net.SyncCaterpillars(
                 this.modloader.clientLobby,
+                team,
                 level,
                 scene,
-                this.parent.cDB.levelData[level].caterpillars,
+                this.parent.cDB.file[team].levelData[level].caterpillars,
                 false
             );
 
@@ -372,9 +385,10 @@ export class BkOnline_Handlers {
         if (foundAcorns) {
             let pData = new Net.SyncAcorns(
                 this.modloader.clientLobby,
+                team,
                 level,
                 scene,
-                this.parent.cDB.levelData[level].acorns,
+                this.parent.cDB.file[team].levelData[level].acorns,
                 false
             );
 
@@ -493,19 +507,19 @@ export class BkOnline_Handlers {
         }
     }
 
-    check_db_instance(db: Net.Database, level: number, scene: number) {
+    check_db_instance(db: Net.Database, team: number, level: number, scene: number) {
         if (level === 0) return;
 
         // Spawn missing level variable!
-        if (!db.levelData.hasOwnProperty(level)) {
-            db.levelData[level] = new Net.LevelData();
+        if (!db.file[team].levelData.hasOwnProperty(level)) {
+            db.file[team].levelData[level] = new Net.LevelData();
         }
 
         if (scene === 0) return;
 
         // Spawn missing scene variable!
-        if (!db.levelData[level].scene.hasOwnProperty(scene)) {
-            db.levelData[level].scene[scene] = new Net.SceneData();
+        if (!db.file[team].levelData[level].scene.hasOwnProperty(scene)) {
+            db.file[team].levelData[level].scene[scene] = new Net.SceneData();
         }
     }
 
@@ -528,11 +542,12 @@ export class BkOnline_Handlers {
     handle_puzzle_count(bufData: Buffer, bufStorage: Buffer) {
         // Initializers
         let pData: Net.SyncBuffered;
+        let team = this.parent.cDB.team;
         let i: number;
         let needUpdate = false;
 
         // Count puzzles currently slotted
-        bufStorage = this.parent.cDB.jigsawsCompleted;
+        bufStorage = this.parent.cDB.file[team].jigsawsCompleted;
         let count_mm: number = this.count_flags(bufData, API.GameBMP.PIECES_IN_PUZZLE_MM_0, 1);
         let count_ttc: number = this.count_flags(bufData, API.GameBMP.PIECES_IN_PUZZLE_TTC_0, 2);
         let count_cc: number = this.count_flags(bufData, API.GameBMP.PIECES_IN_PUZZLE_CC_0, 3);
@@ -714,8 +729,8 @@ export class BkOnline_Handlers {
                 this.core.save.flags_game.set(i, bufData[i]);
             }
 
-            this.parent.cDB.jigsawsCompleted = bufStorage;
-            pData = new Net.SyncBuffered(this.modloader.clientLobby, 'SyncJigsaws', bufStorage, false);
+            this.parent.cDB.file[team].jigsawsCompleted = bufStorage;
+            pData = new Net.SyncBuffered(this.modloader.clientLobby, 'SyncJigsaws', team, bufStorage, false);
             this.modloader.clientSide.sendPacket(pData);
         }
 
@@ -762,8 +777,9 @@ export class BkOnline_Handlers {
     }
 
     handle_flags_cheat(bufData: Buffer, bufStorage: Buffer) {
+        let team = this.parent.cDB.team;
         bufData = this.core.save.flags_cheat.get_all();
-        bufStorage = this.parent.cDB.flagsCheat;
+        bufStorage = this.parent.cDB.file[team].flagsCheat;
 
         // Detect Changes
         let needUpdate = false;
@@ -792,15 +808,16 @@ export class BkOnline_Handlers {
 
         // Save Changes
         this.core.save.flags_cheat.set_all(bufData);
-        this.parent.cDB.flagsCheat = bufData;
+        this.parent.cDB.file[team].flagsCheat = bufData;
 
-        let pData = new Net.SyncBuffered(this.modloader.clientLobby, 'SyncCheatFlags', bufData, false);
+        let pData = new Net.SyncBuffered(this.modloader.clientLobby, 'SyncCheatFlags', team, bufData, false);
         this.modloader.clientSide.sendPacket(pData);
     }
 
     handle_flags_game(bufData: Buffer, bufStorage: Buffer) {
         // Initializers
         let pData: Net.SyncBuffered;
+        let team = this.parent.cDB.team;
         let i: number;
         let count: number;
         let val: number;
@@ -808,7 +825,7 @@ export class BkOnline_Handlers {
         let needRefresh = false;
 
         bufData = this.core.save.flags_game.get_all();
-        bufStorage = this.parent.cDB.flagsGame;
+        bufStorage = this.parent.cDB.file[team].flagsGame;
         count = bufData.byteLength;
         needUpdate = false;
 
@@ -851,8 +868,8 @@ export class BkOnline_Handlers {
 
         // Send Changes to Server
         if (needUpdate) {
-            this.parent.cDB.flagsGame = bufData;
-            pData = new Net.SyncBuffered(this.modloader.clientLobby, 'SyncGameFlags', bufData, false);
+            this.parent.cDB.file[team].flagsGame = bufData;
+            pData = new Net.SyncBuffered(this.modloader.clientLobby, 'SyncGameFlags', team, bufData, false);
             this.modloader.clientSide.sendPacket(pData);
         }
 
@@ -1029,8 +1046,9 @@ export class BkOnline_Handlers {
         // Dont sync until the animation completes
         if (this.core.save.inventory.honeycombs === 6) return;
 
+        let team = this.parent.cDB.team;
         bufData = this.core.save.flags_honeycomb.get_all();
-        bufStorage = this.parent.cDB.flagsHoneycomb;
+        bufStorage = this.parent.cDB.file[team].flagsHoneycomb;
 
         // Detect Changes
         let needUpdate = this.merge_bits(bufData, bufStorage);
@@ -1043,7 +1061,7 @@ export class BkOnline_Handlers {
 
         // Save Changes
         this.core.save.flags_honeycomb.set_all(bufData);
-        this.parent.cDB.flagsHoneycomb = bufData;
+        this.parent.cDB.file[team].flagsHoneycomb = bufData;
 
         // Sync totals
         let count = this.modloader.utils.utilBitCountBuffer(bufData, 0, 0);
@@ -1051,13 +1069,14 @@ export class BkOnline_Handlers {
         this.core.save.inventory.health_upgrades = count / 6;
         this.core.runtime.current_health = count / 6 + 5;
 
-        let pData = new Net.SyncBuffered(this.modloader.clientLobby, 'SyncHoneyCombFlags', bufData, false);
+        let pData = new Net.SyncBuffered(this.modloader.clientLobby, 'SyncHoneyCombFlags', team, bufData, false);
         this.modloader.clientSide.sendPacket(pData);
     }
 
     handle_flags_jiggy(bufData: Buffer, bufStorage: Buffer) {
+        let team = this.parent.cDB.team;
         bufData = this.core.save.flags_jiggy.get_all();
-        bufStorage = this.parent.cDB.flagsJiggy;
+        bufStorage = this.parent.cDB.file[team].flagsJiggy;
 
         // Detect Changes
         let needUpdate = this.merge_bits(bufData, bufStorage);
@@ -1070,39 +1089,41 @@ export class BkOnline_Handlers {
 
         // Save Changes
         this.core.save.flags_jiggy.set_all(bufData);
-        this.parent.cDB.flagsJiggy = bufData;
+        this.parent.cDB.file[team].flagsJiggy = bufData;
 
-        let pData = new Net.SyncBuffered(this.modloader.clientLobby, 'SyncJiggyFlags', bufData, false);
+        let pData = new Net.SyncBuffered(this.modloader.clientLobby, 'SyncJiggyFlags', team, bufData, false);
         this.modloader.clientSide.sendPacket(pData);
     }
 
     handle_flags_token(bufData: Buffer, bufStorage: Buffer) {
+        let team = this.parent.cDB.team;
         bufData = this.core.save.flags_token.get_all();
-        bufStorage = this.parent.cDB.flagsToken;
+        bufStorage = this.parent.cDB.file[team].flagsToken;
 
         // Detect Changes
         if (!this.merge_bits(bufData, bufStorage)) return;
 
         // Save Changes
         this.core.save.flags_token.set_all(bufData);
-        this.parent.cDB.flagsToken = bufData;
+        this.parent.cDB.file[team].flagsToken = bufData;
 
         // Sync totals
         let count = this.modloader.utils.utilBitCountBuffer(bufData, 0, 0);
         this.core.save.inventory.tokens = count - this.parent.cDB.tokensSpent;
 
-        let pData = new Net.SyncBuffered(this.modloader.clientLobby, 'SyncMumboTokenFlags', bufData, false);
+        let pData = new Net.SyncBuffered(this.modloader.clientLobby, 'SyncMumboTokenFlags', team, bufData, false);
         this.modloader.clientSide.sendPacket(pData);
     }
 
     handle_note_totals(bufData: Buffer, bufStorage: Buffer) {
         // Initializers
         let pData: Net.SyncBuffered;
+        let team = this.parent.cDB.team;
         let i: number;
         let count = 0;
         let needUpdate = false;
         bufData = this.core.save.note_totals.get_all();
-        bufStorage = this.parent.cDB.noteTotals;
+        bufStorage = this.parent.cDB.file[team].noteTotals;
         count = bufData.byteLength;
 
         // Detect Changes
@@ -1117,29 +1138,30 @@ export class BkOnline_Handlers {
         // Process Changes
         if (!needUpdate) return;
 
-        this.parent.cDB.noteTotals = bufData;
-        pData = new Net.SyncBuffered(this.modloader.clientLobby, 'SyncNoteTotals', bufData, false);
+        this.parent.cDB.file[team].noteTotals = bufData;
+        pData = new Net.SyncBuffered(this.modloader.clientLobby, 'SyncNoteTotals', team, bufData, false);
         this.modloader.clientSide.sendPacket(pData);
     }
 
     handle_level_specific_items() {
         // Initializers
+        let team = this.parent.cDB.team;
         let level = this.parent.cDB.curLvl;
         
         // Detect Changes
-        this.core.save.inventory.gold_bullions = this.parent.cDB.levelData[level].gold.length;
+        this.core.save.inventory.gold_bullions = this.parent.cDB.file[team].levelData[level].gold.length;
 
-        if (this.parent.cDB.levelData[level].present_b)
+        if (this.parent.cDB.file[team].levelData[level].present_b)
             this.core.save.inventory.present_blue = 1;
         
-        if (this.parent.cDB.levelData[level].present_g)
+        if (this.parent.cDB.file[team].levelData[level].present_g)
             this.core.save.inventory.present_green = 1;
 
-        if (this.parent.cDB.levelData[level].present_r)
+        if (this.parent.cDB.file[team].levelData[level].present_r)
         this.core.save.inventory.present_red = 1;
 
-        this.core.save.inventory.caterpillar = this.parent.cDB.levelData[level].caterpillars.length;
-        this.core.save.inventory.acorn = this.parent.cDB.levelData[level].acorns.length;
+        this.core.save.inventory.caterpillar = this.parent.cDB.file[team].levelData[level].caterpillars.length;
+        this.core.save.inventory.acorn = this.parent.cDB.file[team].levelData[level].acorns.length;
     }
 
     handle_moves() {
@@ -1148,9 +1170,10 @@ export class BkOnline_Handlers {
 
         // Initializers
         let pData: Net.SyncNumbered;
+        let team = this.parent.cDB.team;
         let id: number;
         let val = this.core.save.moves;
-        let valDB = this.parent.cDB.moves;
+        let valDB = this.parent.cDB.file[team].moves;
 
         // Move Get Item Add Check
         {
@@ -1181,8 +1204,8 @@ export class BkOnline_Handlers {
         this.core.save.moves = val;
 
         // Send Changes to Server
-        this.parent.cDB.moves = val;
-        pData = new Net.SyncNumbered(this.modloader.clientLobby, 'SyncMoves', val, false);
+        this.parent.cDB.file[team].moves = val;
+        pData = new Net.SyncNumbered(this.modloader.clientLobby, 'SyncMoves', team, val, false);
         this.modloader.clientSide.sendPacket(pData);
 
         // Perform heal
@@ -1194,13 +1217,14 @@ export class BkOnline_Handlers {
     handle_events_level() {
         // Initializers
         let pData: Net.SyncNumbered;
+        let team = this.parent.cDB.team;
         let evt = this.core.runtime.current_level_events;
 
         // Detect Changes
-        if (evt === this.parent.cDB.levelEvents) return;
+        if (evt === this.parent.cDB.file[team].levelEvents) return;
 
         // Process Changes
-        evt |= this.parent.cDB.levelEvents;
+        evt |= this.parent.cDB.file[team].levelEvents;
 
         // Dont update while these cutscenes are active!
         if (
@@ -1215,23 +1239,24 @@ export class BkOnline_Handlers {
             (evt & (1 << API.EventLevelBMP.CUTSCENE_GV_MOTE_FILLED_CUTSCENE))
         ) return;
 
-        this.parent.cDB.levelEvents = evt;
+        this.parent.cDB.file[team].levelEvents = evt;
         this.core.runtime.current_level_events = evt;
 
-        pData = new Net.SyncNumbered(this.modloader.clientLobby, 'SyncLevelEvents', evt, false);
+        pData = new Net.SyncNumbered(this.modloader.clientLobby, 'SyncLevelEvents', team, evt, false);
         this.modloader.clientSide.sendPacket(pData);
     }
 
     handle_events_scene() {
         // Initializers
+        let team = this.parent.cDB.team;
         let level = this.parent.cDB.curLvl;
         let scene = this.parent.cDB.curScn;
         let needUpdate = false;
 
         // Ensure we have this level/scene data!
-        this.check_db_instance(this.parent.cDB, level, scene);
+        this.check_db_instance(this.parent.cDB, team, level, scene);
 
-        let evt = this.parent.cDB.levelData[level].scene[scene].events;
+        let evt = this.parent.cDB.file[team].levelData[level].scene[scene].events;
 
         switch (this.parent.cDB.curScn) {
             case API.SceneType.SM_MAIN:
@@ -1247,7 +1272,7 @@ export class BkOnline_Handlers {
                 }
 
                 // Bridge Dialogue Already Complete
-                if (this.parent.cDB.levelData.hasOwnProperty(API.LevelType.GRUNTILDAS_LAIR)) {
+                if (this.parent.cDB.file[team].levelData.hasOwnProperty(API.LevelType.GRUNTILDAS_LAIR)) {
                     evt |= 1 << API.EventSceneBMP.SM_FIST_TOP_BOTTLES_TALK;
                     evt |= 1 << API.EventSceneBMP.SM_END_TUTORIAL;
                 }
@@ -1265,12 +1290,13 @@ export class BkOnline_Handlers {
 
         // Set correct data in game and to database
         this.core.runtime.current_scene_events |= evt;
-        this.parent.cDB.levelData[level].scene[scene].events = evt;
+        this.parent.cDB.file[team].levelData[level].scene[scene].events = evt;
 
         // Send changes to network
         let pData = new Net.SyncSceneNumbered(
             this.modloader.clientLobby,
             'SyncSceneEvents',
+            team,
             level,
             scene,
             this.core.runtime.current_scene_events,
@@ -1285,26 +1311,27 @@ export class BkOnline_Handlers {
 
     handle_permanence_counts() {
         // Initializers
+        let team = this.parent.cDB.team;
         let level = this.parent.cDB.curLvl;
         let count: number;
 
         // Handle Level Jinjos
         {
-            this.core.save.inventory.jinjos = this.parent.cDB.levelData[level].jinjos
+            this.core.save.inventory.jinjos = this.parent.cDB.file[team].levelData[level].jinjos
         }
 
         // Handle Scene Notes
         {
             // Totals override!
-            if (this.parent.cDB.noteTotals[level] === 0x64) {
+            if (this.parent.cDB.file[team].noteTotals[level] === 0x64) {
                 this.core.save.inventory.notes = 0x64;
             } else {
                 // Object Count
-                count = this.parent.cDB.levelData[level].onotes;
+                count = this.parent.cDB.file[team].levelData[level].onotes;
 
                 // Voxel Count
-                Object.keys(this.parent.cDB.levelData[level].scene).forEach((key: string) => {
-                    count += this.parent.cDB.levelData[level].scene[key].notes.length;
+                Object.keys(this.parent.cDB.file[team].levelData[level].scene).forEach((key: string) => {
+                    count += this.parent.cDB.file[team].levelData[level].scene[key].notes.length;
                 });
 
                 // Detect Changes
@@ -1334,6 +1361,7 @@ export class BkOnline_Handlers {
         let actor_arr_addr = global.ModLoader[API.AddressType.RT_ACTOR_ARRAY_PTR];
         let ptr = this.modloader.emulator.dereferencePointer(actor_arr_addr);
         let count = this.modloader.emulator.rdramRead32(ptr);
+        let team = this.parent.cDB.team;
         let level = this.parent.cDB.curLvl;
         let subPtr: number;
         let id: number;
@@ -1355,7 +1383,7 @@ export class BkOnline_Handlers {
                     val = Math.floor(id / 8);
                     bit = id % 8;
                     if (bit === 0) val -= 1;
-                    val = this.parent.cDB.flagsHoneycomb[val];
+                    val = this.parent.cDB.file[team].flagsHoneycomb[val];
                     if ((val & (1 << (bit))) !== 0)
                         this.delete_actor(ptr);
                     break;
@@ -1365,7 +1393,7 @@ export class BkOnline_Handlers {
                     val = Math.floor(id / 8);
                     bit = id % 8;
                     if (bit === 0) val -= 1;
-                    val = this.parent.cDB.flagsJiggy[val];
+                    val = this.parent.cDB.file[team].flagsJiggy[val];
                     if ((val & (1 << (bit))) !== 0)
                         this.delete_actor(ptr);
                     break;
@@ -1375,7 +1403,7 @@ export class BkOnline_Handlers {
                     val = Math.floor(id / 8);
                     bit = id % 8;
                     if (bit === 0) val -= 1;
-                    val = this.parent.cDB.flagsToken[val];
+                    val = this.parent.cDB.file[team].flagsToken[val];
                     if ((val & (1 << (bit))) !== 0)
                         this.delete_actor(ptr);
                     break;
@@ -1383,35 +1411,35 @@ export class BkOnline_Handlers {
                 // Jinjos (By Color)
                 case API.ActorType.COLLECTABLE_JINJO_BLUE:
                     val = API.JinjoType.BLUE;
-                    if ((this.parent.cDB.levelData[level].jinjos & (1 << val)) !== 0) {
+                    if ((this.parent.cDB.file[team].levelData[level].jinjos & (1 << val)) !== 0) {
                         this.delete_actor(ptr);
                     }
                     break;
 
                 case API.ActorType.COLLECTABLE_JINJO_GREEN:
                     val = API.JinjoType.GREEN;
-                    if ((this.parent.cDB.levelData[level].jinjos & (1 << val)) !== 0) {
+                    if ((this.parent.cDB.file[team].levelData[level].jinjos & (1 << val)) !== 0) {
                         this.delete_actor(ptr);
                     }
                     break;
 
                 case API.ActorType.COLLECTABLE_JINJO_ORANGE:
                     val = API.JinjoType.ORANGE;
-                    if ((this.parent.cDB.levelData[level].jinjos & (1 << val)) !== 0) {
+                    if ((this.parent.cDB.file[team].levelData[level].jinjos & (1 << val)) !== 0) {
                         this.delete_actor(ptr);
                     }
                     break;
 
                 case API.ActorType.COLLECTABLE_JINJO_PINK:
                     val = API.JinjoType.PINK;
-                    if ((this.parent.cDB.levelData[level].jinjos & (1 << val)) !== 0) {
+                    if ((this.parent.cDB.file[team].levelData[level].jinjos & (1 << val)) !== 0) {
                         this.delete_actor(ptr);
                     }
                     break;
 
                 case API.ActorType.COLLECTABLE_JINJO_YELLOW:
                     val = API.JinjoType.YELLOW;
-                    if ((this.parent.cDB.levelData[level].jinjos & (1 << val)) !== 0) {
+                    if ((this.parent.cDB.file[team].levelData[level].jinjos & (1 << val)) !== 0) {
                         this.delete_actor(ptr);
                     }
                     break;
@@ -1433,6 +1461,7 @@ export class BkOnline_Handlers {
     }
 
     despawn_voxel_item(ptr: number) {
+        let team = this.parent.cDB.team;
         let level = this.parent.cDB.curLvl;
         let scene = this.parent.cDB.curScn;
         let name = '';
@@ -1440,13 +1469,13 @@ export class BkOnline_Handlers {
         switch (this.modloader.emulator.rdramRead16(ptr)) {
             case API.VoxelIdType.NOTE:
                 // Total overrides
-                if (this.parent.cDB.noteTotals[level] === 0x64) {
+                if (this.parent.cDB.file[team].noteTotals[level] === 0x64) {
                     this.modloader.emulator.rdramWrite8(ptr + 0x0B, 0x00);
                 } else {
                     name = this.get_voxel_name(ptr);
 
                     // We have this item, despawn it
-                    if (this.parent.cDB.levelData[level].scene[scene].notes.includes(name)) {
+                    if (this.parent.cDB.file[team].levelData[level].scene[scene].notes.includes(name)) {
                         this.mod_voxel(ptr, false);
                     } else { // We don't have this, make it visible again!
                         this.mod_voxel(ptr, true);
@@ -1458,7 +1487,7 @@ export class BkOnline_Handlers {
                 name = this.get_voxel_name(ptr);
 
                 // We have this item, despawn it
-                if (this.parent.cDB.levelData[level].gold.includes(name)) {
+                if (this.parent.cDB.file[team].levelData[level].gold.includes(name)) {
                     this.mod_voxel(ptr, false);
                 } else { // We don't have this, make it visible again!
                     this.mod_voxel(ptr, true);
@@ -1469,7 +1498,7 @@ export class BkOnline_Handlers {
                 name = this.get_voxel_name(ptr);
                 
                 // We have this item, despawn it
-                if (this.parent.cDB.levelData[level].presents.includes(name)) {
+                if (this.parent.cDB.file[team].levelData[level].presents.includes(name)) {
                     this.mod_voxel(ptr, false);
                 } else { // We don't have this, make it visible again!
                     this.mod_voxel(ptr, true);
@@ -1480,7 +1509,7 @@ export class BkOnline_Handlers {
                 name = this.get_voxel_name(ptr);
                 
                 // We have this item, despawn it
-                if (this.parent.cDB.levelData[level].presents.includes(name)) {
+                if (this.parent.cDB.file[team].levelData[level].presents.includes(name)) {
                     this.mod_voxel(ptr, false);
                 } else { // We don't have this, make it visible again!
                     this.mod_voxel(ptr, true);
@@ -1491,7 +1520,7 @@ export class BkOnline_Handlers {
                 name = this.get_voxel_name(ptr);
                 
                 // We have this item, despawn it
-                if (this.parent.cDB.levelData[level].presents.includes(name)) {
+                if (this.parent.cDB.file[team].levelData[level].presents.includes(name)) {
                     this.mod_voxel(ptr, false);
                 } else { // We don't have this, make it visible again!
                     this.mod_voxel(ptr, true);
@@ -1502,7 +1531,7 @@ export class BkOnline_Handlers {
                 name = this.get_voxel_name(ptr);
                 
                 // We have this item, despawn it
-                if (this.parent.cDB.levelData[level].caterpillars.includes(name)) {
+                if (this.parent.cDB.file[team].levelData[level].caterpillars.includes(name)) {
                     this.mod_voxel(ptr, false);
                 } else { // We don't have this, make it visible again!
                     this.mod_voxel(ptr, true);
@@ -1513,7 +1542,7 @@ export class BkOnline_Handlers {
                 name = this.get_voxel_name(ptr);
                 
                 // We have this item, despawn it
-                if (this.parent.cDB.levelData[level].acorns.includes(name)) {
+                if (this.parent.cDB.file[team].levelData[level].acorns.includes(name)) {
                     this.mod_voxel(ptr, false);
                 } else { // We don't have this, make it visible again!
                     this.mod_voxel(ptr, true);
@@ -1561,9 +1590,10 @@ export class BkOnline_Handlers {
         this.parent.cDB.delVoxels = false;
 
         // Make sure we have content to delete!
+        let team = this.parent.cDB.team;
         let level = this.parent.cDB.curLvl;
         let scene = this.parent.cDB.curScn;
-        if (this.parent.cDB.levelData[level].scene[scene].notes.Length < 1) return;
+        if (this.parent.cDB.file[team].levelData[level].scene[scene].notes.Length < 1) return;
 
         // Call actual despawn algorithm
         this.despawn_voxel_struct();

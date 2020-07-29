@@ -56,7 +56,12 @@ export class BkOnline_Client {
     onClient_ServerConnection(evt: any) {
         this.parent.pMgr.reset();
         if (this.core.runtime === undefined || !this.core.isPlaying) return;
-        let pData = new Net.SyncLocation(this.modloader.clientLobby, this.parent.cDB.curLvl, this.parent.cDB.curScn);
+        let pData = new Net.SyncLocation(
+            this.modloader.clientLobby,
+            this.parent.cDB.team,
+            this.parent.cDB.curLvl,
+            this.parent.cDB.curScn
+        );
         this.modloader.clientSide.sendPacket(pData);
     }
 
@@ -77,16 +82,7 @@ export class BkOnline_Client {
     @NetworkHandler('SyncStorage')
     onClient_SyncStorage(packet: Net.SyncStorage): void {
         this.log('Received: {Lobby Storage}');
-        this.parent.cDB.flagsCheat = packet.flags_cheat;
-        this.parent.cDB.flagsGame = packet.flags_game;
-        this.parent.cDB.flagsHoneycomb = packet.flags_honeycomb;
-        this.parent.cDB.flagsJiggy = packet.flags_jiggy;
-        this.parent.cDB.flagsToken = packet.flags_token;
-        this.parent.cDB.noteTotals = packet.note_totals;
-        this.parent.cDB.jigsawsCompleted = packet.jigsaws_completed;
-        this.parent.cDB.levelData = packet.level_data;
-        this.parent.cDB.levelEvents = packet.level_events;
-        this.parent.cDB.moves = packet.moves;
+        this.parent.cDB.file = packet.file;
     }
 
     @NetworkHandler('SyncCheatFlags')
@@ -94,9 +90,9 @@ export class BkOnline_Client {
         this.log('Received: {Cheat Flags}');
 
         // Detect Changes
-        if (!this.handlers.merge_bits(this.parent.cDB.flagsCheat, packet.value)) return;
+        if (!this.handlers.merge_bits(this.parent.cDB.file[packet.team].flagsCheat, packet.value)) return;
 
-        this.log('Updated: {Cheat Flags}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Cheat Flags}');
     }
 
     @NetworkHandler('SyncGameFlags')
@@ -104,9 +100,9 @@ export class BkOnline_Client {
         this.log('Received: {Game Flags}');
 
         // Detect Changes
-        if (!this.handlers.merge_bits(this.parent.cDB.flagsGame, packet.value)) return;
+        if (!this.handlers.merge_bits(this.parent.cDB.file[packet.team].flagsGame, packet.value)) return;
 
-        this.log('Updated: {Game Flags}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Game Flags}');
     }
 
     @NetworkHandler('SyncHoneyCombFlags')
@@ -114,11 +110,11 @@ export class BkOnline_Client {
         this.log('Received: {HoneyComb Flags}');
 
         // Detect Changes
-        if (!this.handlers.merge_bits(this.parent.cDB.flagsHoneycomb, packet.value)) return;
+        if (!this.handlers.merge_bits(this.parent.cDB.file[packet.team].flagsHoneycomb, packet.value)) return;
 
         this.parent.cDB.delActors = true;
 
-        this.log('Updated: {HoneyComb Flags}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {HoneyComb Flags}');
     }
 
     @NetworkHandler('SyncJiggyFlags')
@@ -126,21 +122,22 @@ export class BkOnline_Client {
         this.log('Received: {Jiggy Flags}');
 
         // Detect Changes
-        if (!this.handlers.merge_bits(this.parent.cDB.flagsJiggy, packet.value)) return;
+        if (!this.handlers.merge_bits(this.parent.cDB.file[packet.team].flagsJiggy, packet.value)) return;
 
         this.parent.cDB.delActors = true;
 
-        this.log('Updated: {Jiggy Flags}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Jiggy Flags}');
     }
 
     @NetworkHandler('SyncMoves')
     onClient_SyncMoves(packet: Net.SyncNumbered) {
         this.log('Received: {Move Flags}');
 
-        if (this.parent.cDB.moves === packet.value) return;
-        this.parent.cDB.moves |= packet.value;
+        // Detect Changes
+        if (this.parent.cDB.file[packet.team].moves === packet.value) return;
+        this.parent.cDB.file[packet.team].moves |= packet.value;
 
-        this.log('Updated: {Move Flags}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Move Flags}');
     }
 
     @NetworkHandler('SyncMumboTokenFlags')
@@ -148,18 +145,19 @@ export class BkOnline_Client {
         this.log('Received: {Mumbo Token Flags}');
 
         // Detect Changes
-        if (!this.handlers.merge_bits(this.parent.cDB.flagsToken, packet.value)) return;
+        if (!this.handlers.merge_bits(this.parent.cDB.file[packet.team].flagsToken, packet.value)) return;
 
         this.parent.cDB.delActors = true;
 
-        this.log('Updated: {Mumbo Token Flags}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Mumbo Token Flags}');
     }
 
     @NetworkHandler('SyncNoteTotals')
     onClient_SyncNoteTotals(packet: Net.SyncBuffered) {
         this.log('Received: {Note Totals}');
 
-        let data: Buffer = this.parent.cDB.noteTotals;
+        // Detect Changes
+        let data: Buffer = this.parent.cDB.file[packet.team].noteTotals;
         let count: number = data.byteLength;
         let i = 0;
         let needUpdate = false;
@@ -173,16 +171,17 @@ export class BkOnline_Client {
 
         if (!needUpdate) return;
 
-        this.parent.cDB.noteTotals = data;
+        this.parent.cDB.file[packet.team].noteTotals = data;
 
-        this.log('Updated: {Note Totals}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Note Totals}');
     }
 
     @NetworkHandler('SyncJigsaws')
     onClient_SyncJigsaws(packet: Net.SyncBuffered) {
         this.log('Received: {Jigsaws Completion}');
 
-        let data: Buffer = this.parent.cDB.jigsawsCompleted;
+        // Detect Changes
+        let data: Buffer = this.parent.cDB.file[packet.team].jigsawsCompleted;
         let count: number = data.byteLength;
         let i = 0;
         let needUpdate = false;
@@ -195,19 +194,20 @@ export class BkOnline_Client {
 
         if (!needUpdate) return;
 
-        this.parent.cDB.jigsawsCompleted = data;
+        this.parent.cDB.file[packet.team].jigsawsCompleted = data;
 
-        this.log('Updated: {Jigsaws Completion}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Jigsaws Completion}');
     }
 
     @NetworkHandler('SyncLevelEvents')
     onClient_SyncLevelEvents(packet: Net.SyncNumbered) {
         this.log('Received: {Level Events}');
 
-        if (this.parent.cDB.levelEvents === packet.value) return;
-        this.parent.cDB.levelEvents |= packet.value;
+        // Detect Changes
+        if (this.parent.cDB.file[packet.team].levelEvents === packet.value) return;
+        this.parent.cDB.file[packet.team].levelEvents |= packet.value;
 
-        this.log('Updated: {Level Events}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Level Events}');
     }
 
     // Puppet Tracking
@@ -222,7 +222,7 @@ export class BkOnline_Client {
             scene = this.parent.cDB.curScn;
         }
 
-        let pData = new Net.SyncLocation(packet.lobby, level, scene);
+        let pData = new Net.SyncLocation(packet.lobby, this.parent.cDB.team, level, scene);
         this.modloader.clientSide.sendPacketToSpecificPlayer(pData, packet.player);
     }
 
@@ -238,7 +238,7 @@ export class BkOnline_Client {
         if (packet.level === API.LevelType.UNKNOWN ||
             packet.scene === API.SceneType.UNKNOWN) return;
 
-        this.handlers.check_db_instance(this.parent.cDB, packet.level, packet.scene);
+        this.handlers.check_db_instance(this.parent.cDB, packet.team, packet.level, packet.scene);
     }
 
     @NetworkHandler('SyncPuppet')
@@ -252,12 +252,14 @@ export class BkOnline_Client {
     onClient_SyncJinjos(packet: Net.SyncLevelNumbered) {
         this.log('Received: {Jinjo}');
 
+        // Detect Changes
         let level = packet.level;
 
         // Ensure we have this level/scene data!
-        this.handlers.check_db_instance(this.parent.cDB, level, 0);
+        this.handlers.check_db_instance(this.parent.cDB, packet.team, level, 0);
 
-        let map = this.parent.cDB.levelData[level];
+        
+        let map = this.parent.cDB.file[packet.team].levelData[level];
         if (map.jinjos === packet.value) return;
         map.jinjos |= packet.value;
 
@@ -266,7 +268,7 @@ export class BkOnline_Client {
             this.parent.cDB.delActors = true;
         }
 
-        this.log('Updated: {Jinjo}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Jinjo}');
     }
 
     @NetworkHandler('SyncObjectNotes')
@@ -276,26 +278,27 @@ export class BkOnline_Client {
         let level = packet.level;
 
         // Ensure we have this level/scene data!
-        this.handlers.check_db_instance(this.parent.cDB, level, 0);
+        this.handlers.check_db_instance(this.parent.cDB, packet.team, level, 0);
 
-        let map = this.parent.cDB.levelData[level];
+        let map = this.parent.cDB.file[packet.team].levelData[level];
         if (map.onotes >= packet.value) return;
         map.onotes = packet.value;
 
-        this.log('Updated: {Level Note Count}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Level Note Count}');
     }
 
     @NetworkHandler('SyncVoxelNotes')
     onClient_SyncVoxelNotes(packet: Net.SyncVoxelNotes) {
         this.log('Received: {Level Note Count}');
 
+        // Detect Changes
         let level = packet.level;
         let scene = packet.scene;
 
         // Ensure we have this level/scene data!
-        this.handlers.check_db_instance(this.parent.cDB, level, scene);
+        this.handlers.check_db_instance(this.parent.cDB, packet.team, level, scene);
 
-        let map = this.parent.cDB.levelData[level].scene[scene];
+        let map = this.parent.cDB.file[packet.team].levelData[level].scene[scene];
         let i = 0;
         let needsUpdate = false;
 
@@ -313,20 +316,21 @@ export class BkOnline_Client {
             this.parent.cDB.delVoxels = true;
         }
 
-        this.log('Updated: {Level Note Count}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Level Note Count}');
     }
 
     @NetworkHandler('SyncGold')
     onClient_SyncGold(packet: Net.SyncGold) {
         this.log('Received: {Level Specific - Gold Bullions}');
 
+        // Detect Changes
         let level = packet.level;
         let scene = packet.scene;
 
         // Ensure we have this level/scene data!
-        this.handlers.check_db_instance(this.parent.cDB, level, scene);
+        this.handlers.check_db_instance(this.parent.cDB, packet.team, level, scene);
 
-        let map = this.parent.cDB.levelData[level];
+        let map = this.parent.cDB.file[packet.team].levelData[level];
         let i = 0;
         let needsUpdate = false;
 
@@ -344,20 +348,21 @@ export class BkOnline_Client {
             this.parent.cDB.delVoxels = true;
         }
 
-        this.log('Updated: {Level Specific - Gold Bullions}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Level Specific - Gold Bullions}');
     }
 
     @NetworkHandler('SyncPresents')
     onClient_SyncPresents(packet: Net.SyncPresents) {
         this.log('Received: {Level Specific - Presents}');
 
+        // Detect Changes
         let level = packet.level;
         let scene = packet.scene;
 
         // Ensure we have this level/scene data!
-        this.handlers.check_db_instance(this.parent.cDB, level, scene);
+        this.handlers.check_db_instance(this.parent.cDB, packet.team, level, scene);
 
-        let map = this.parent.cDB.levelData[level];
+        let map = this.parent.cDB.file[packet.team].levelData[level];
         let i = 0;
         let needsUpdate = false;
 
@@ -379,20 +384,21 @@ export class BkOnline_Client {
             this.parent.cDB.delVoxels = true;
         }
 
-        this.log('Updated: {Level Specific - Presents}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Level Specific - Presents}');
     }
 
     @NetworkHandler('SyncCaterpillars')
     onClient_SyncCaterpillars(packet: Net.SyncCaterpillars) {
         this.log('Received: {Level Specific - Caterpillars}');
 
+        // Detect Changes
         let level = packet.level;
         let scene = packet.scene;
 
         // Ensure we have this level/scene data!
-        this.handlers.check_db_instance(this.parent.cDB, level, scene);
+        this.handlers.check_db_instance(this.parent.cDB, packet.team, level, scene);
 
-        let map = this.parent.cDB.levelData[level];
+        let map = this.parent.cDB.file[packet.team].levelData[level];
         let i = 0;
         let needsUpdate = false;
 
@@ -410,20 +416,21 @@ export class BkOnline_Client {
             this.parent.cDB.delVoxels = true;
         }
 
-        this.log('Updated: {Level Specific - Caterpillars}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Level Specific - Caterpillars}');
     }
 
     @NetworkHandler('SyncAcorns')
     onClient_SyncAcorns(packet: Net.SyncAcorns) {
         this.log('Received: {Level Specific - Acorns}');
 
+        // Detect Changes
         let level = packet.level;
         let scene = packet.scene;
 
         // Ensure we have this level/scene data!
-        this.handlers.check_db_instance(this.parent.cDB, level, scene);
+        this.handlers.check_db_instance(this.parent.cDB, packet.team, level, scene);
 
-        let map = this.parent.cDB.levelData[level];
+        let map = this.parent.cDB.file[packet.team].levelData[level];
         let i = 0;
         let needsUpdate = false;
 
@@ -441,6 +448,6 @@ export class BkOnline_Client {
             this.parent.cDB.delVoxels = true;
         }
 
-        this.log('Updated: {Level Specific - Acorns}');
+        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Level Specific - Acorns}');
     }
 }

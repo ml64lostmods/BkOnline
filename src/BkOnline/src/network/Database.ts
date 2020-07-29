@@ -1,9 +1,9 @@
-export class Database {
+export class FileData {
+    flagsCheat: Buffer = Buffer.alloc(0x19);
     flagsGame: Buffer = Buffer.alloc(0x20);
     flagsHoneycomb: Buffer = Buffer.alloc(0x03);
     flagsJiggy: Buffer = Buffer.alloc(0x0d);
     flagsToken: Buffer = Buffer.alloc(0x10);
-    flagsCheat: Buffer = Buffer.alloc(0x19);
     noteTotals: Buffer = Buffer.alloc(0x0f);
     jigsawsCompleted: Buffer = Buffer.alloc(11);
     levelData: any = {};
@@ -11,7 +11,19 @@ export class Database {
     moves: number = 0;
 }
 
+export class Database {
+    file: FileData[] = Array<FileData>(3);
+    
+    constructor() {
+        this.file[0] = new FileData();
+        this.file[1] = new FileData();
+        this.file[2] = new FileData();
+        this.file[3] = new FileData();
+    }
+}
+
 export class DatabaseClient extends Database {
+    team: number = 3;
     curLvl: number = 0;
     curScn: number = 0;
     oNoteCount: number = 0;
@@ -20,6 +32,7 @@ export class DatabaseClient extends Database {
     delActors: boolean = false;
     delVoxels: boolean = false;
     reloadMap: boolean = false;
+
 }
 
 export class DatabaseServer extends Database {
