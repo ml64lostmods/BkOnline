@@ -62,7 +62,6 @@ export class BkOnline implements IPlugin, IPluginServerConfig {
 
         this.ModLoader.logger.info('Puppet manager activated.');
 
-
         // Load Character
         let char_input = this.config.character;
         const char_val: API.CharacterType | undefined = (<any>API.CharacterType)[char_input];

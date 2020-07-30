@@ -17,7 +17,7 @@ export class PuppetManager {
     private emptyPuppetSlot: number[] = new Array<number>();
     private awaitingSpawn: Puppet[] = new Array<Puppet>();
     private awaitingPuppets: INetworkPlayer[] = new Array<INetworkPlayer>();
-    dummy!: Puppet;
+    private me!: Puppet;
 
     log(msg: string) {
         console.info('info:    [Puppet Manager] ' + msg);
@@ -33,23 +33,25 @@ export class PuppetManager {
         this.core = core;
         this.mapi = mapi;
         this.commandBuffer = this.core.commandBuffer;
-        this.dummy = new Puppet(
-            this.emu,
-            this.commandBuffer,
-            nplayer,
-            core.player,
-            0x0,
-            -1
-        );
         let addr = global.ModLoader[API.AddressType.PUPPET] + 0x04;
         let offset: number;
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < 15; i++) {
             offset = addr + i * 0x08 + 0x04;
             this.puppetArray.push(
                 new Puppet(emu, this.commandBuffer, dummy, this.core.player, offset, i)
             );
             this.emptyPuppetSlot.push(i);
         }
+
+        this.me = new Puppet(
+            this.emu,
+            this.commandBuffer,
+            nplayer,
+            core.player,
+            addr + 15 * 0x08 + 0x04,
+            15
+        )
+        this.puppetArray[15] = this.me;
     }
 
     reset() {
@@ -87,10 +89,10 @@ export class PuppetManager {
     }
 
     get scene(): API.SceneType {
-        return this.dummy.scene;
+        return this.me.scene;
     }
     set scene(scene: API.SceneType) {
-        this.dummy.scene = scene;
+        this.me.scene = scene;
     }
 
     changePuppetScene(nplayer: INetworkPlayer, scene: API.SceneType) {
@@ -177,8 +179,12 @@ export class PuppetManager {
     }
 
     sendPuppet() {
-        let pData = new Net.SyncPuppet(this.mapi.clientLobby, this.dummy.data);
+        let pData = new Net.SyncPuppet(this.mapi.clientLobby, this.me.data);
         this.mapi.clientSide.sendPacket(pData);
+
+        // Overwrite self with puppet version
+        this.me.handleThis();
+        this.core.player.scale = 0;
     }
 
     handlePuppet(packet: Net.SyncPuppet) {

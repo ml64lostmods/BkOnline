@@ -36,13 +36,29 @@ export class Puppet extends API.BaseObj {
         this.pointer = pointer;
     }
 
+    handleThis() {
+        if (!this.isSpawned || !this.canHandle) return;
+        if (this.data.broken) return;
+        
+        this.data.anim = this.data.anim;
+        this.data.pos = this.data.pos;
+        this.data.rot = this.data.rot;
+        this.data.model = this.data.model;
+        this.data.scale = this.data.scale;
+        this.data.visible_parts = this.data.visible_parts;
+
+        // Broken puppet check
+        if (this.data.broken) this.despawn();
+    }
+
     handleInstance(data: PData.Data) {
         if (!this.isSpawned || !this.canHandle) return;
         if (this.data.broken) return;
+
         Object.keys(data).forEach((key: string) => {
             (this.data as any)[key] = (data as any)[key];
         });
-
+        
         // Broken puppet check
         if (this.data.broken) this.despawn();
     }
