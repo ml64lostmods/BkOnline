@@ -6,6 +6,7 @@ import * as Net from './network/Imports';
 import * as Puppet from './puppet/Imports';
 
 export interface IConfig {
+    character: string;
     print_events_level: boolean;
     print_events_scene: boolean;
     print_net_client: boolean;
@@ -26,6 +27,7 @@ export class BkOnline implements IPlugin, IPluginServerConfig {
     Server!: Hnd.BkOnline_Server
 
     config: IConfig = {
+        character: "BANJO_KAZOOIE",
         print_events_level: false,
         print_events_scene: false,
         print_net_client: false,
@@ -59,6 +61,12 @@ export class BkOnline implements IPlugin, IPluginServerConfig {
         );
 
         this.ModLoader.logger.info('Puppet manager activated.');
+
+
+        // Load Character
+        let char_input = this.config.character;
+        const char_val: API.CharacterType | undefined = (<any>API.CharacterType)[char_input];
+        if (char_val !== undefined) this.core.character.character_id = char_val;
     }
 
     onTick(): void { this.Handle.tick(); }
