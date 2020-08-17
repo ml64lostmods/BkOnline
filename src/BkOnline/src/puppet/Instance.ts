@@ -3,14 +3,16 @@ import * as API from 'BanjoKazooie/API/Imports';
 
 export class Data extends API.BaseObj implements Data {
     private readonly copyFields: string[] = new Array<string>();
+    character: API.ICharacter;
     player: API.IPlayer;
     pointer: number;
     model_id: number = 0x00;
     broken: boolean = false;
 
-    constructor(emu: IMemory, pointer: number, player: API.IPlayer) {
+    constructor(emu: IMemory, pointer: number, character: API.ICharacter, player: API.IPlayer) {
         super(emu);
         this.pointer = pointer;
+        this.character = character;
         this.player = player;
         this.copyFields.push('anim');
         this.copyFields.push('pos');
@@ -85,7 +87,7 @@ export class Data extends API.BaseObj implements Data {
     }
 
     get model(): number {
-        return this.player.model_index;
+        return this.character.true_id;
     }
     set model(val: number) {
         if (this.model_id === val) return;

@@ -38,7 +38,15 @@ export class PuppetManager {
         for (let i = 0; i < 15; i++) {
             offset = addr + i * 0x08 + 0x04;
             this.puppetArray.push(
-                new Puppet(emu, this.commandBuffer, dummy, this.core.player, offset, i)
+                new Puppet(
+                    emu,
+                    this.commandBuffer,
+                    dummy,
+                    this.core.character,
+                    this.core.player,
+                    offset,
+                    i
+                )
             );
             this.emptyPuppetSlot.push(i);
         }
@@ -47,6 +55,7 @@ export class PuppetManager {
             this.emu,
             this.commandBuffer,
             nplayer,
+            core.character,
             core.player,
             addr + 15 * 0x08 + 0x04,
             15

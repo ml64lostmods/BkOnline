@@ -22,12 +22,13 @@ export class Puppet extends API.BaseObj {
         emu: IMemory,
         commandBuffer: API.ICommandBuffer,
         nplayer: INetworkPlayer,
+        character: API.ICharacter,
         player: API.IPlayer,
         pointer: number,
         index: number
     ) {
         super(emu);
-        this.data = new PData.Data(emu, pointer, player);
+        this.data = new PData.Data(emu, pointer, character, player);
         this.commandBuffer = commandBuffer;
         this.nplayer = nplayer;
         this.id = nplayer.uuid;
