@@ -182,9 +182,8 @@ export class PuppetManager {
         let pData = new Net.SyncPuppet(this.mapi.clientLobby, this.me.data);
         this.mapi.clientSide.sendPacket(pData);
 
-        // Overwrite self with puppet version
-        this.me.handleThis();
-        this.core.player.scale = 0;
+        // Only animal forms will be visible
+        this.me.handleThis(this.core.player.animal !== API.AnimalType.BEAR_BIRD);
     }
 
     handlePuppet(packet: Net.SyncPuppet) {
