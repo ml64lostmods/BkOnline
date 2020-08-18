@@ -90,7 +90,7 @@ export class Puppet extends API.BaseObj {
                 this.isSpawned = true;
                 this.canHandle = true;
                 
-                this.log('Puppet spawned! ' + ptr.toString(16).toUpperCase());
+                //this.log('Puppet spawned! ' + ptr.toString(16).toUpperCase());
             }
         );
     }
@@ -113,7 +113,7 @@ export class Puppet extends API.BaseObj {
 
                 this.isSpawned = false;
                 this.data.broken = false;
-                this.log('Puppet ' + this.id + ' despawned.');
+                //this.log('Puppet ' + this.id + ' despawned.');
             }
         );
     }

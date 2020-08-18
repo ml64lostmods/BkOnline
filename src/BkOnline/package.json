@@ -1,10 +1,10 @@
 {
   "name": "BkOnline",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "description": "",
   "main": "BkOnline.js",
   "author": "SpiceyWolf, Mittenz",
-  "credits": "denoflions, MelonSpeedruns",
+  "credits": "denoflions, MelonSpeedruns, TheLensta, Wedarobi",
   "license": "GPL3",
   "core": "BanjoKazooie",
   "updateUrl": "https://raw.githubusercontent.com/Modloader-Lost-Mods/BkOnline/master/update.json",

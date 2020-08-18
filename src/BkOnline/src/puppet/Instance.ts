@@ -33,7 +33,6 @@ export class Data extends API.BaseObj implements Data {
         }
 
         if (this.emulator.rdramRead32(ptr + 0x1c) !== 0xdeadbeef) {
-            console.log('info:    [DEADBEEF] Saved the day!');
             this.broken = true;
             return ret;
         }
@@ -68,7 +67,7 @@ export class Data extends API.BaseObj implements Data {
         let ptr: number = this.safetyCheck();
         if (ptr === 0x000000) return;
 
-        this.emulator.rdramWritePtrBuffer(this.pointer, 0x4, val);
+        this.emulator.rdramWriteBuffer(ptr + 0x4, val);
     }
 
     get rot(): Buffer {
@@ -81,9 +80,9 @@ export class Data extends API.BaseObj implements Data {
         let x: number = val.readFloatBE(0x0);
         let y: number = val.readFloatBE(0x4);
         let z: number = val.readFloatBE(0x8);
-        this.emulator.rdramWritePtrF32(this.pointer, 0x68, x);
-        this.emulator.rdramWritePtrF32(this.pointer, 0x50, y);
-        this.emulator.rdramWritePtrF32(this.pointer, 0x110, z);
+        this.emulator.rdramWriteF32(ptr + 0x68, x);
+        this.emulator.rdramWriteF32(ptr + 0x50, y);
+        this.emulator.rdramWriteF32(ptr + 0x110, z);
     }
 
     get model(): number {
