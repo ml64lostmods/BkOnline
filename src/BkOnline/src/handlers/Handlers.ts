@@ -3,6 +3,7 @@ import { IModLoaderAPI } from 'modloader64_api/IModLoaderAPI';
 import * as Main from '../Main';
 import * as API from 'BanjoKazooie/API/Imports';
 import * as Net from '../network/Imports';
+import { DiscordStatus } from 'modloader64_api/Discord';
 
 export class BkOnline_Handlers {
     private parent!: Main.BkOnline;
@@ -10,6 +11,7 @@ export class BkOnline_Handlers {
     // Helpers
     private eventsL = 0;
     private eventsS = 0;
+    private onTitle = true;
 
     get core(): API.IBKCore { return this.parent.core; }
     get modloader(): IModLoaderAPI { return this.parent.ModLoader; }
@@ -27,10 +29,19 @@ export class BkOnline_Handlers {
                 let save: Buffer = Buffer.alloc(1);
                 save[0] = 0x11;
                 this.core.save.set_save(API.ProfileType.TITLE, save);
+
+                // Alert for Discord status
+                if (!this.onTitle) {
+                    this.modloader.gui.setDiscordStatus(
+                        new DiscordStatus('Playing BkOnline', 
+                        'On the title screen [Team Select]')
+                    );
+                    this.onTitle = true;
+                }
             }
 
             return;
-        }
+        } this.onTitle = false;
 
         // Global file - Set team
         this.parent.cDB.team = this.core.runtime.get_current_profile();
@@ -114,6 +125,10 @@ export class BkOnline_Handlers {
 
             // Reset object note count
             this.parent.cDB.oNoteCount = 0;
+
+            // Update discord notice
+            this.modloader.gui.setDiscordStatus(new DiscordStatus('Playing BkOnline', 'In ' + API.LevelType[level].toString()));
+            // To get the level names for romhacks, go to [3785D0] and read [D0] then split by null termination string. The level index should be the name.
         }
 
         // Ensure we have this level/scene data!

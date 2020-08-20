@@ -5,12 +5,14 @@ import * as API from 'BanjoKazooie/API/Imports';
 import * as Hnd from './handlers/Imports';
 import * as Net from './network/Imports';
 import * as Puppet from './puppet/Imports';
+import { DiscordStatus } from 'modloader64_api/Discord';
 
 export interface IConfig {
     print_events_level: boolean;
     print_events_scene: boolean;
     print_net_client: boolean;
     print_net_server: boolean;
+    show_tracker: boolean;
     skip_intro: boolean;
 }
 
@@ -31,6 +33,7 @@ export class BkOnline implements IPlugin, IPluginServerConfig {
         print_events_scene: false,
         print_net_client: false,
         print_net_server: false,
+        show_tracker: true,
         skip_intro: true
     };
 
@@ -60,6 +63,17 @@ export class BkOnline implements IPlugin, IPluginServerConfig {
         );
 
         this.ModLoader.logger.info('Puppet manager activated.');
+
+        // Show tracker
+        if (this.config.show_tracker) this.ModLoader.gui.openWindow(698, 795, __dirname + '/gui/Tracker.html');
+
+        // Update discord
+        let status: DiscordStatus = new DiscordStatus('Playing BkOnline', 'On the title screen [Team Select]');
+        status.smallImageKey = 'bko';
+        status.partyId = this.ModLoader.clientLobby;
+        status.partyMax = 15;
+        status.partySize = 1;
+        this.ModLoader.gui.setDiscordStatus(status);
     }
 
     onTick(): void { this.Handle.tick(); }
