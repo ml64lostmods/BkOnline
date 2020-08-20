@@ -397,8 +397,8 @@ export class BkOnline_Handlers {
     }
 
     get_voxel_name(ptr: number): string {
-        return this.modloader.emulator.rdramRead16(ptr + 0x04) + "|" +
-               this.modloader.emulator.rdramRead16(ptr + 0x06) + "|" +
+        return this.modloader.emulator.rdramRead16(ptr + 0x04) + '|' +
+               this.modloader.emulator.rdramRead16(ptr + 0x06) + '|' +
                this.modloader.emulator.rdramRead16(ptr + 0x08);
     }
 

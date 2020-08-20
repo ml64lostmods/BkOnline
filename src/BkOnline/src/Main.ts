@@ -1,3 +1,4 @@
+import fs from 'fs';
 import { IModLoaderAPI, IPlugin, IPluginServerConfig } from 'modloader64_api/IModLoaderAPI';
 import { InjectCore } from 'modloader64_api/CoreInjection';
 import * as API from 'BanjoKazooie/API/Imports';
@@ -6,12 +7,6 @@ import * as Net from './network/Imports';
 import * as Puppet from './puppet/Imports';
 
 export interface IConfig {
-    bear_bird: string;
-    termite: string;
-    crocodile: string;
-    walrus: string;
-    pumpkin: string;
-    bee: string;
     print_events_level: boolean;
     print_events_scene: boolean;
     print_net_client: boolean;
@@ -32,12 +27,6 @@ export class BkOnline implements IPlugin, IPluginServerConfig {
     Server!: Hnd.BkOnline_Server
 
     config: IConfig = {
-        bear_bird: "BANJO_KAZOOIE",
-        termite: "BANJO_TERMITE",
-        crocodile: "BANJO_CROCODILE",
-        walrus: "BANJO_WALRUS",
-        pumpkin: "BANJO_PUMPKIN",
-        bee: "BANJO_BEE",
         print_events_level: false,
         print_events_scene: false,
         print_net_client: false,
@@ -71,28 +60,9 @@ export class BkOnline implements IPlugin, IPluginServerConfig {
         );
 
         this.ModLoader.logger.info('Puppet manager activated.');
-
-        // Load Character
-        const val_bear_bird: API.CharacterType | undefined = (<any>API.CharacterType)[this.config.bear_bird];
-        if (val_bear_bird !== undefined) this.core.character.bear_bird_id = val_bear_bird;
-        
-        const val_termite: API.CharacterType | undefined = (<any>API.CharacterType)[this.config.termite];
-        if (val_termite !== undefined) this.core.character.termite_id = val_termite;
-        
-        const val_crocodile: API.CharacterType | undefined = (<any>API.CharacterType)[this.config.crocodile];
-        if (val_crocodile !== undefined) this.core.character.crocodile_id = val_crocodile;
-        
-        const val_walrus: API.CharacterType | undefined = (<any>API.CharacterType)[this.config.walrus];
-        if (val_walrus !== undefined) this.core.character.walrus_id = val_walrus;
-        
-        const val_pumpkin: API.CharacterType | undefined = (<any>API.CharacterType)[this.config.pumpkin];
-        if (val_pumpkin !== undefined) this.core.character.pumpkin_id = val_pumpkin;
-        
-        const val_bee: API.CharacterType | undefined = (<any>API.CharacterType)[this.config.bee];
-        if (val_bee !== undefined) this.core.character.bee_id = val_bee;
     }
 
     onTick(): void { this.Handle.tick(); }
 
-    getServerURL(): string { return "158.69.60.101:8000"; }
+    getServerURL(): string { return '158.69.60.101:8000'; }
 }

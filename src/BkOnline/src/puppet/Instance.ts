@@ -123,7 +123,7 @@ export class Data extends API.BaseObj implements Data {
         let ptr: number = this.safetyCheck();
         if (ptr === 0x000000) return;
 
-        this.emulator.rdramWriteBuffer(ptr + 0x84, val);
+        // this.emulator.rdramWriteBuffer(ptr + 0x88, val);
     }
 
     toJSON() {

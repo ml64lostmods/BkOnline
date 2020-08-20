@@ -191,13 +191,9 @@ export class PuppetManager {
         let pData = new Net.SyncPuppet(this.mapi.clientLobby, this.me.data);
         this.mapi.clientSide.sendPacket(pData);
 
-        // Only animal forms will be visible
-        if (this.core.player.animal === API.AnimalType.BEAR_BIRD) {
-            this.me.handleThis(false);
-        } else {
-            this.me.handleThis(true);
-            this.core.player.scale = 10;// = false;
-        }
+        // Handle self puppet
+        this.me.handleThis();
+        this.core.player.scale = 10;
     }
 
     handlePuppet(packet: Net.SyncPuppet) {

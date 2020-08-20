@@ -37,7 +37,7 @@ export class Puppet extends API.BaseObj {
         this.pointer = pointer;
     }
 
-    handleThis(visible: boolean) {
+    handleThis() {
         if (!this.isSpawned || !this.canHandle) return;
         if (this.data.broken) return;
         
@@ -47,9 +47,6 @@ export class Puppet extends API.BaseObj {
         this.data.model = this.data.model;
         this.data.scale = this.data.scale;
         this.data.visible_parts = this.data.visible_parts;
-
-        // Hide when not in bear-bird form
-        if (!visible) this.data.scale = 0;
 
         // Broken puppet check
         if (this.data.broken) this.despawn();
