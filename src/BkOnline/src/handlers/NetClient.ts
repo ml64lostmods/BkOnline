@@ -43,13 +43,6 @@ export class BkOnline_Client {
         this.parent.cDB = new Net.DatabaseClient();
         let pData = new Packet('Request_Storage', 'BkOnline', this.modloader.clientLobby, false);
         this.modloader.clientSide.sendPacket(pData);
-
-        // Load config
-        let path = './mods_settings';
-        if (!fs.existsSync(path)) fs.mkdirSync(path);
-        path += '/BkOnline.json';
-        if (!fs.existsSync(path)) fs.writeFileSync(path, JSON.stringify(this.parent.config, null, 2));
-        this.parent.config = JSON.parse(fs.readFileSync(path).toString());
     }
 
     @EventHandler(EventsClient.ON_SERVER_CONNECTION)

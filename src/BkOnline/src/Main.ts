@@ -28,14 +28,7 @@ export class BkOnline implements IPlugin, IPluginServerConfig {
     Client!: Hnd.BkOnline_Client
     Server!: Hnd.BkOnline_Server
 
-    config: IConfig = {
-        print_events_level: false,
-        print_events_scene: false,
-        print_net_client: false,
-        print_net_server: false,
-        show_tracker: true,
-        skip_intro: true
-    };
+    config!: IConfig;
 
     constructor() {
         // Construct sub-modules
@@ -47,6 +40,15 @@ export class BkOnline implements IPlugin, IPluginServerConfig {
     preinit(): void { this.pMgr = new Puppet.PuppetManager(); }
 
     init(): void {
+        // Init config
+        this.config = this.ModLoader.config.registerConfigCategory('BkOnline') as IConfig;
+        this.ModLoader.config.setData('BkOnline', 'print_events_level', 'false');
+        this.ModLoader.config.setData('BkOnline', 'print_events_scene', 'false');
+        this.ModLoader.config.setData('BkOnline', 'print_net_client', 'false');
+        this.ModLoader.config.setData('BkOnline', 'print_net_server', 'false');
+        this.ModLoader.config.setData('BkOnline', 'show_tracker', 'true');
+        this.ModLoader.config.setData('BkOnline', 'skip_intro', 'true');
+
         // Init sub-modules
         this.Handle.init();
         this.Client.init();
