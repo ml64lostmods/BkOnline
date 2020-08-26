@@ -7,6 +7,7 @@ import * as Net from './network/Imports';
 import * as Puppet from './puppet/Imports';
 
 export interface IConfig {
+    play_as_puppet: boolean;
     print_events_level: boolean;
     print_events_scene: boolean;
     print_net_client: boolean;
@@ -41,6 +42,7 @@ export class BkOnline implements IPlugin, IPluginServerConfig {
     init(): void {
         // Init config
         this.config = this.ModLoader.config.registerConfigCategory('BkOnline') as IConfig;
+        this.ModLoader.config.setData('BkOnline', 'play_as_puppet', 'true');
         this.ModLoader.config.setData('BkOnline', 'print_events_level', 'false');
         this.ModLoader.config.setData('BkOnline', 'print_events_scene', 'false');
         this.ModLoader.config.setData('BkOnline', 'print_net_client', 'false');

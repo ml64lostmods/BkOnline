@@ -187,13 +187,14 @@ export class PuppetManager {
         }
     }
 
-    sendPuppet() {
+    sendPuppet(selfPuppet: boolean) {
         let pData = new Net.SyncPuppet(this.mapi.clientLobby, this.me.data);
         this.mapi.clientSide.sendPacket(pData);
 
-        // Handle self puppet
-        this.me.handleThis();
-        this.core.player.scale = 10;
+        if (selfPuppet) {
+            this.me.handleThis();
+            this.core.player.scale = 10;
+        }
     }
 
     handlePuppet(packet: Net.SyncPuppet) {
@@ -208,10 +209,10 @@ export class PuppetManager {
         puppet.handleInstance(packet.puppet);
     }
 
-    onTick(isSafe: boolean) {
+    onTick(isSafe: boolean, selfPuppet: boolean) {
         this.handleNewPlayers();
         if (isSafe) this.handleAwaitingSpawns();
-        this.sendPuppet();
+        this.sendPuppet(selfPuppet);
         this.handleSpawnState();
     }
 }
