@@ -13,7 +13,7 @@ export class FileData {
 
 export class Database {
     file: FileData[] = Array<FileData>(3);
-    
+
     constructor() {
         this.file[0] = new FileData();
         this.file[1] = new FileData();
@@ -23,6 +23,8 @@ export class Database {
 }
 
 export class DatabaseClient extends Database {
+    tutorialComplete: boolean[] = Array<boolean>(3);
+
     team: number = 3;
     curLvl: number = 0;
     curScn: number = 0;
@@ -32,7 +34,14 @@ export class DatabaseClient extends Database {
     delActors: boolean = false;
     delVoxels: boolean = false;
     reloadMap: boolean = false;
-
+    
+    constructor() {
+        super();
+        this.tutorialComplete[0] = false;
+        this.tutorialComplete[1] = false;
+        this.tutorialComplete[2] = false;
+        this.tutorialComplete[3] = false;
+    }
 }
 
 export class DatabaseServer extends Database {

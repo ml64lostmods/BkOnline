@@ -1,11 +1,10 @@
-import fs from 'fs';
 import { IModLoaderAPI, IPlugin, IPluginServerConfig } from 'modloader64_api/IModLoaderAPI';
 import { InjectCore } from 'modloader64_api/CoreInjection';
+import { DiscordStatus } from 'modloader64_api/Discord';
 import * as API from 'BanjoKazooie/API/Imports';
 import * as Hnd from './handlers/Imports';
 import * as Net from './network/Imports';
 import * as Puppet from './puppet/Imports';
-import { DiscordStatus } from 'modloader64_api/Discord';
 
 export interface IConfig {
     print_events_level: boolean;

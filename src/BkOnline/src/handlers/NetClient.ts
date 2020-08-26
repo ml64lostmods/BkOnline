@@ -1,4 +1,3 @@
-import fs from 'fs';
 import { EventHandler, EventsClient } from 'modloader64_api/EventHandler';
 import { IModLoaderAPI } from 'modloader64_api/IModLoaderAPI';
 import { LobbyData, NetworkHandler, INetworkPlayer } from 'modloader64_api/NetworkHandler';

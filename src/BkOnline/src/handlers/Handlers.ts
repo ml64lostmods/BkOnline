@@ -1,9 +1,9 @@
 import { EventHandler } from 'modloader64_api/EventHandler';
 import { IModLoaderAPI } from 'modloader64_api/IModLoaderAPI';
+import { DiscordStatus } from 'modloader64_api/Discord';
 import * as Main from '../Main';
 import * as API from 'BanjoKazooie/API/Imports';
 import * as Net from '../network/Imports';
-import { DiscordStatus } from 'modloader64_api/Discord';
 
 export class BkOnline_Handlers {
     private parent!: Main.BkOnline;
@@ -33,8 +33,8 @@ export class BkOnline_Handlers {
                 // Alert for Discord status
                 if (!this.onTitle) {
                     this.modloader.gui.setDiscordStatus(
-                        new DiscordStatus('Playing BkOnline', 
-                        'On the title screen [Team Select]')
+                        new DiscordStatus('Playing BkOnline',
+                            'On the title screen [Team Select]')
                     );
                     this.onTitle = true;
                 }
@@ -205,7 +205,7 @@ export class BkOnline_Handlers {
         let foundJinjo = false;
         let foundNotes = false;
 
-        actors.forEach((id: number)=>{
+        actors.forEach((id: number) => {
             switch (id) {
                 case API.ActorIdType.NOTE:
                     this.parent.cDB.oNoteCount += 1;
@@ -279,7 +279,7 @@ export class BkOnline_Handlers {
         let foundCaterpillars = false;
         let foundAcorns = false;
 
-        voxels.forEach((ptr: number)=>{
+        voxels.forEach((ptr: number) => {
             switch (this.modloader.emulator.rdramRead16(ptr)) {
                 case API.VoxelIdType.NOTE:
                     name = this.get_voxel_name(ptr);
@@ -305,7 +305,7 @@ export class BkOnline_Handlers {
                         foundPresents = true;
                     }
                     break;
-                
+
                 case API.VoxelIdType.PRESENT_GREEN:
                     name = this.get_voxel_name(ptr);
                     if (!this.parent.cDB.file[team].levelData[level].presents.includes(name)) {
@@ -314,7 +314,7 @@ export class BkOnline_Handlers {
                         foundPresents = true;
                     }
                     break;
-                
+
                 case API.VoxelIdType.PRESENT_RED:
                     name = this.get_voxel_name(ptr);
                     if (!this.parent.cDB.file[team].levelData[level].presents.includes(name)) {
@@ -323,7 +323,7 @@ export class BkOnline_Handlers {
                         foundPresents = true;
                     }
                     break;
-                
+
                 case API.VoxelIdType.CATERPILLAR:
                     name = this.get_voxel_name(ptr);
                     if (!this.parent.cDB.file[team].levelData[level].caterpillars.includes(name)) {
@@ -331,7 +331,7 @@ export class BkOnline_Handlers {
                         foundCaterpillars = true;
                     }
                     break;
-                
+
                 case API.VoxelIdType.ACORN:
                     name = this.get_voxel_name(ptr);
                     if (!this.parent.cDB.file[team].levelData[level].acorns.includes(name)) {
@@ -339,7 +339,7 @@ export class BkOnline_Handlers {
                         foundAcorns = true;
                     }
                     break;
-                }
+            }
         });
 
         if (foundNotes) {
@@ -413,8 +413,8 @@ export class BkOnline_Handlers {
 
     get_voxel_name(ptr: number): string {
         return this.modloader.emulator.rdramRead16(ptr + 0x04) + '|' +
-               this.modloader.emulator.rdramRead16(ptr + 0x06) + '|' +
-               this.modloader.emulator.rdramRead16(ptr + 0x08);
+            this.modloader.emulator.rdramRead16(ptr + 0x06) + '|' +
+            this.modloader.emulator.rdramRead16(ptr + 0x08);
     }
 
     // #################################################
@@ -1162,18 +1162,18 @@ export class BkOnline_Handlers {
         // Initializers
         let team = this.parent.cDB.team;
         let level = this.parent.cDB.curLvl;
-        
+
         // Detect Changes
         this.core.save.inventory.gold_bullions = this.parent.cDB.file[team].levelData[level].gold.length;
 
         if (this.parent.cDB.file[team].levelData[level].present_b)
             this.core.save.inventory.present_blue = 1;
-        
+
         if (this.parent.cDB.file[team].levelData[level].present_g)
             this.core.save.inventory.present_green = 1;
 
         if (this.parent.cDB.file[team].levelData[level].present_r)
-        this.core.save.inventory.present_red = 1;
+            this.core.save.inventory.present_red = 1;
 
         this.core.save.inventory.caterpillar = this.parent.cDB.file[team].levelData[level].caterpillars.length;
         this.core.save.inventory.acorn = this.parent.cDB.file[team].levelData[level].acorns.length;
@@ -1271,10 +1271,17 @@ export class BkOnline_Handlers {
         // Ensure we have this level/scene data!
         this.check_db_instance(this.parent.cDB, team, level, scene);
 
+        // Check if we've left tutorial
+        if (level !== API.LevelType.SPIRAL_MOUNTAIN)
+            this.parent.cDB.tutorialComplete[team] = true;
+
         let evt = this.parent.cDB.file[team].levelData[level].scene[scene].events;
 
         switch (this.parent.cDB.curScn) {
-            case API.SceneType.SM_MAIN:
+            case API.SceneType.SM_MAIN: {
+                // Dont sync after tutorial
+                if (this.parent.cDB.tutorialComplete[team]) break;
+
                 // First Bottles Interaction
                 if (this.core.save.moves !== 0) {
                     evt |= 1 << API.EventSceneBMP.SM_BOTTLES_FIRST_TALK;
@@ -1288,9 +1295,10 @@ export class BkOnline_Handlers {
 
                 // Bridge Dialogue Already Complete
                 if (this.parent.cDB.file[team].levelData.hasOwnProperty(API.LevelType.GRUNTILDAS_LAIR)) {
-                    evt |= 1 << API.EventSceneBMP.SM_FIST_TOP_BOTTLES_TALK;
+                    evt |= 1 << API.EventSceneBMP.SM_BOTTLES_FIRST_TALK_TOP;
                     evt |= 1 << API.EventSceneBMP.SM_END_TUTORIAL;
                 }
+            }
             case API.SceneType.BGS_MAIN: {
                 evt &= 0xfb;
             }
@@ -1497,7 +1505,7 @@ export class BkOnline_Handlers {
                     }
                 }
                 break;
-            
+
             case API.VoxelIdType.GOLD_BULLION:
                 name = this.get_voxel_name(ptr);
 
@@ -1511,7 +1519,7 @@ export class BkOnline_Handlers {
 
             case API.VoxelIdType.PRESENT_BLUE:
                 name = this.get_voxel_name(ptr);
-                
+
                 // We have this item, despawn it
                 if (this.parent.cDB.file[team].levelData[level].presents.includes(name)) {
                     this.mod_voxel(ptr, false);
@@ -1519,10 +1527,10 @@ export class BkOnline_Handlers {
                     this.mod_voxel(ptr, true);
                 }
                 break;
-            
+
             case API.VoxelIdType.PRESENT_GREEN:
                 name = this.get_voxel_name(ptr);
-                
+
                 // We have this item, despawn it
                 if (this.parent.cDB.file[team].levelData[level].presents.includes(name)) {
                     this.mod_voxel(ptr, false);
@@ -1530,10 +1538,10 @@ export class BkOnline_Handlers {
                     this.mod_voxel(ptr, true);
                 }
                 break;
-            
+
             case API.VoxelIdType.PRESENT_RED:
                 name = this.get_voxel_name(ptr);
-                
+
                 // We have this item, despawn it
                 if (this.parent.cDB.file[team].levelData[level].presents.includes(name)) {
                     this.mod_voxel(ptr, false);
@@ -1541,10 +1549,10 @@ export class BkOnline_Handlers {
                     this.mod_voxel(ptr, true);
                 }
                 break;
-            
+
             case API.VoxelIdType.CATERPILLAR:
                 name = this.get_voxel_name(ptr);
-                
+
                 // We have this item, despawn it
                 if (this.parent.cDB.file[team].levelData[level].caterpillars.includes(name)) {
                     this.mod_voxel(ptr, false);
@@ -1552,10 +1560,10 @@ export class BkOnline_Handlers {
                     this.mod_voxel(ptr, true);
                 }
                 break;
-            
+
             case API.VoxelIdType.ACORN:
                 name = this.get_voxel_name(ptr);
-                
+
                 // We have this item, despawn it
                 if (this.parent.cDB.file[team].levelData[level].acorns.includes(name)) {
                     this.mod_voxel(ptr, false);
@@ -1613,5 +1621,4 @@ export class BkOnline_Handlers {
         // Call actual despawn algorithm
         this.despawn_voxel_struct();
     }
-
 }
