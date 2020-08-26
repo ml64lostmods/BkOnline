@@ -546,8 +546,7 @@ export class BkOnline_Handlers {
         }
 
         this.parent.pMgr.onTick(
-            !inTransit && !isLoading && this.parent.cDB.curScn !== API.SceneType.UNKNOWN,
-            this.parent.config.play_as_puppet
+            !inTransit && !isLoading && this.parent.cDB.curScn !== API.SceneType.UNKNOWN
         );
     }
 
