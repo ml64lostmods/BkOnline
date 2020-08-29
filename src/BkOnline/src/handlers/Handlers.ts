@@ -682,10 +682,6 @@ export class BkOnline_Handlers {
             if (count_dh === 4 && bufStorage[10] !== 1) {
                 bufStorage[10] = 1;
                 needUpdate = true;
-
-                // Activate extra health
-                let count = this.modloader.utils.utilBitCountBuffer(bufData, 0, 0);
-                this.core.runtime.current_health = (count / 6 + 5) * 2;
             } else if (count_dh !== 4 && bufStorage[10] === 1) {
                 count_dh = 4;
                 this.set_flags(bufData, API.GameBMP.PIECES_IN_PUZZLE_DH_0, 3, 4);
@@ -846,6 +842,13 @@ export class BkOnline_Handlers {
 
         // Map refresh check
         needRefresh = this.handle_refresh_check(bufData, bufStorage);
+
+        // Check to get refill when double health activated
+        if (!this.get_flag(bufData, API.GameBMP.DOUBLE_HEALTH) &&
+            this.get_flag(bufStorage, API.GameBMP.DOUBLE_HEALTH)) {
+            let count = this.modloader.utils.utilBitCountBuffer(bufData, 0, 0);
+            this.core.runtime.current_health = (count / 6 + 5) * 2;
+        }
 
         for (i = 0; i < count; i++) {
             if (i === 4) continue; // RBB water level
