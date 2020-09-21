@@ -23,6 +23,7 @@ export class Database {
 }
 
 export class DatabaseClient extends Database {
+    onceEvent: EventData = new EventData();
     tutorialComplete: boolean[] = Array<boolean>(3);
 
     team: number = 3;
@@ -70,4 +71,11 @@ export class LevelData {
 export class SceneData {
     notes: number[] = new Array<number>();
     events: number = 0;
+}
+
+export class EventData {
+    level: number = 0;
+    scene: number = 0;
+    event: number = 0;
+    active: boolean = false;
 }

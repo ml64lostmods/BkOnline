@@ -6,7 +6,6 @@ export class Data extends API.BaseObj implements Data {
     character: API.ICharacter;
     player: API.IPlayer;
     pointer: number;
-    model_id: number = 0x00;
     broken: boolean = false;
 
     constructor(emu: IMemory, pointer: number, character: API.ICharacter, player: API.IPlayer) {
@@ -89,8 +88,6 @@ export class Data extends API.BaseObj implements Data {
         return this.character.true_id;
     }
     set model(val: number) {
-        if (this.model_id === val) return;
-
         let ptr: number = this.safetyCheck();
         if (ptr === 0x000000) return;
 

@@ -102,6 +102,43 @@ export class BkOnline_Handlers {
             this.modloader.logger.info('[Tick] ' + input);
     }
 
+    utilBitCountBuffer(arr: Buffer, offset: number, length: number)
+    {
+
+        if (length <= 0 || offset + length > arr.byteLength)
+            length = arr.byteLength;
+
+        let count: number = 0;
+        for (let i = offset; i < length; i++) 
+            for (let n = 0; n < 8; n++) 
+                if (arr[i] & (1 << n)) count++; 
+        return count;
+    }
+
+    utilBitCount32(value: number)
+    {
+        let count: number = 0;
+        for (let i = 0; i < 32; i++) 
+            if (value & (1 << i)) count++;
+        return count;
+    } 
+
+    utilBitCount16(value: number)
+    {
+        let count: number = 0;
+        for (let i = 0; i < 16; i++) 
+            if (value & (1 << i)) count++;
+            return count;
+    } 
+
+    utilBitCount8(value: number)
+    {
+        let count: number = 0;
+        for (let i = 0; i < 8; i++) 
+            if (value & (1 << i)) count++;
+            return count;
+    }
+
     // #################################################
     // ##  API Events
     // #################################################
@@ -187,6 +224,12 @@ export class BkOnline_Handlers {
                     break;
             }
         }
+
+        // Clear our once-event sync cache
+        let evt = new Net.EventData()
+        evt.level = level;
+        evt.scene = scene;
+        this.parent.cDB.onceEvent = evt;
 
         // Make sure to delete already collected stuff!
         this.parent.cDB.delActors = true;
@@ -846,7 +889,7 @@ export class BkOnline_Handlers {
         // Check to get refill when double health activated
         if (!this.get_flag(bufData, API.GameBMP.DOUBLE_HEALTH) &&
             this.get_flag(bufStorage, API.GameBMP.DOUBLE_HEALTH)) {
-            let count = this.modloader.utils.utilBitCountBuffer(bufData, 0, 0);
+            let count = this.utilBitCountBuffer(bufData, 0, 0);
             this.core.runtime.current_health = (count / 6 + 5) * 2;
         }
 
@@ -1072,7 +1115,7 @@ export class BkOnline_Handlers {
         let needUpdate = this.merge_bits(bufData, bufStorage);
         if (!needUpdate) {
             // Animation fix
-            let count = this.modloader.utils.utilBitCountBuffer(bufData, 0, 0);
+            let count = this.utilBitCountBuffer(bufData, 0, 0);
             this.core.save.inventory.health_upgrades = count / 6;
             return;
         }
@@ -1082,7 +1125,7 @@ export class BkOnline_Handlers {
         this.parent.cDB.file[team].flagsHoneycomb = bufData;
 
         // Sync totals
-        let count = this.modloader.utils.utilBitCountBuffer(bufData, 0, 0);
+        let count = this.utilBitCountBuffer(bufData, 0, 0);
         this.core.save.inventory.honeycombs = count % 6;
         this.core.save.inventory.health_upgrades = count / 6;
         this.core.runtime.current_health = count / 6 + 5;
@@ -1100,7 +1143,7 @@ export class BkOnline_Handlers {
         let needUpdate = this.merge_bits(bufData, bufStorage);
 
         // Sync totals
-        let count = this.modloader.utils.utilBitCountBuffer(bufData, 0, 0);
+        let count = this.utilBitCountBuffer(bufData, 0, 0);
         this.core.save.inventory.jiggies = count - this.parent.cDB.jiggySpent;
 
         if (!needUpdate) return;
@@ -1126,7 +1169,7 @@ export class BkOnline_Handlers {
         this.parent.cDB.file[team].flagsToken = bufData;
 
         // Sync totals
-        let count = this.modloader.utils.utilBitCountBuffer(bufData, 0, 0);
+        let count = this.utilBitCountBuffer(bufData, 0, 0);
         this.core.save.inventory.tokens = count - this.parent.cDB.tokensSpent;
 
         let pData = new Net.SyncBuffered(this.modloader.clientLobby, 'SyncMumboTokenFlags', team, bufData, false);
@@ -1228,7 +1271,7 @@ export class BkOnline_Handlers {
 
         // Perform heal
         let honeycombs = this.core.save.flags_honeycomb.get_all();
-        let count = this.modloader.utils.utilBitCountBuffer(honeycombs, 0, 0);
+        let count = this.utilBitCountBuffer(honeycombs, 0, 0);
         this.core.runtime.current_health = count / 6 + 5;
     }
 
