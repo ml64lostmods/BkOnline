@@ -894,7 +894,9 @@ export class BkOnline_Handlers {
         }
 
         for (i = 0; i < count; i++) {
-            if (i === 4) continue; // RBB water level
+            if (i === 4 || // RBB water level
+                i === 31) continue; // GV Pyramid count
+
             if (i > 10 && i < 17) continue; // Puzzle gap
             if (bufData[i] === bufStorage[i]) continue;
 
@@ -924,6 +926,22 @@ export class BkOnline_Handlers {
         if ((bufData[16] & 0x000000fc) !== val) {
             bufData[16] |= val;
             this.core.save.flags_game.set(16, bufData[16]);
+            needUpdate = true;
+        }
+
+        // GV Pyramid count
+        val = bufStorage[31] & 0x000000fc;
+        if ((bufData[11] & 0x0000001f) !== val) {
+            bufData[11] |= val;
+            this.core.save.flags_game.set(11, bufData[11]);
+            needUpdate = true;
+        }
+
+        // Actually count pyramid now
+        let pval = bufStorage[31] & 3;
+        if ((bufData[11] & 3) < pval) {
+            bufData[11] = val | pval;
+            this.core.save.flags_game.set(11, bufData[11]);
             needUpdate = true;
         }
 
