@@ -19,7 +19,8 @@
       "BanjoKazooie/*": [
         "libs/BanjoKazooie/*"
       ]
-    }
+    },
+    "noImplicitAny": false
   },
   "include": [
     "src/**/*.ts",
