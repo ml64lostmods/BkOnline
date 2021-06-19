@@ -66,7 +66,7 @@ export class BkOnline implements IPlugin, IPluginServerConfig {
         this.ModLoader.logger.info('Puppet manager activated.');
 
         // Show tracker
-        if (this.config.show_tracker) this.ModLoader.gui.openWindow(698, 795, __dirname + '/gui/Tracker.html');
+        //if (this.config.show_tracker) this.ModLoader.gui.openWindow(698, 795, __dirname + '/gui/Tracker.html');
 
         // Update discord
         let status: DiscordStatus = new DiscordStatus('Playing BkOnline', 'On the title screen [Team Select]');
