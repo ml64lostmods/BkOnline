@@ -2,7 +2,7 @@
   "rootDir": "./",
   "outDir": "build",
   "compilerOptions": {
-    "rootDir": "./",
+    "rootDir": "./src",
     "target": "ESNEXT",
     "module": "commonjs",
     "sourceMap": true,
@@ -13,11 +13,11 @@
     "moduleResolution": "node",
     "baseUrl": "./",
     "paths": {
+      "@sound/*": [
+        "./build/emulator/*"
+      ],
       "@BkOnline/*": [
         "./src/BkOnline/*"
-      ],
-      "BanjoKazooie/*": [
-        "libs/BanjoKazooie/*"
       ]
     },
     "noImplicitAny": false
@@ -34,6 +34,7 @@
     "node_modules",
     "API",
     "build.ts",
-    "build"
+    "build",
+    "cores"
   ]
 }
