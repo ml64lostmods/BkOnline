@@ -98,7 +98,7 @@ export class BkOnline_Handlers {
     // #################################################
 
     log(input: string) {
-        if (this.parent.config.print_net_server)
+        if (this.parent.config.print_net_client)
             this.modloader.logger.info('[Tick] ' + input);
     }
 
@@ -455,9 +455,9 @@ export class BkOnline_Handlers {
     }
 
     get_voxel_name(ptr: number): string {
-        return this.modloader.emulator.rdramRead16(ptr + 0x04) + '|' +
-            this.modloader.emulator.rdramRead16(ptr + 0x06) + '|' +
-            this.modloader.emulator.rdramRead16(ptr + 0x08);
+        return this.modloader.emulator.rdramRead16(ptr + 0x04).toString(16) +
+            this.modloader.emulator.rdramRead16(ptr + 0x06).toString(16) +
+            this.modloader.emulator.rdramRead16(ptr + 0x08).toString(16);
     }
 
     // #################################################
@@ -1590,6 +1590,9 @@ export class BkOnline_Handlers {
                 } else { // We don't have this, make it visible again!
                     this.mod_voxel(ptr, true);
                 }
+
+                this.log("Present [Blue] de/re-spawn check invoked.")
+
                 break;
 
             case API.VoxelIdType.PRESENT_GREEN:
@@ -1601,6 +1604,9 @@ export class BkOnline_Handlers {
                 } else { // We don't have this, make it visible again!
                     this.mod_voxel(ptr, true);
                 }
+
+                this.log("Present [Green] de/re-spawn check invoked.")
+                
                 break;
 
             case API.VoxelIdType.PRESENT_RED:
@@ -1612,6 +1618,9 @@ export class BkOnline_Handlers {
                 } else { // We don't have this, make it visible again!
                     this.mod_voxel(ptr, true);
                 }
+
+                this.log("Present [Red] de/re-spawn check invoked.")
+                
                 break;
 
             case API.VoxelIdType.CATERPILLAR:
