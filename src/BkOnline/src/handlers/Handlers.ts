@@ -77,15 +77,15 @@ export class BkOnline_Handlers {
         this.handle_flags_token(bufData!, bufStorage!);
 
         // Non-Flags Handlers
+        this.handle_jiggy_count();
         this.handle_moves();
         this.handle_events_level();
         this.handle_events_scene();
-        this.handle_items();
 
         // Order-Specific Handlers
         this.handle_permanence_counts();
         this.handle_note_totals(bufData!, bufStorage!);
-        // this.handle_level_specific_items(); // Experimental
+        this.handle_items();
 
         // Force Despawn Code
         if (transitState !== 0) return;
@@ -455,9 +455,9 @@ export class BkOnline_Handlers {
     }
 
     get_voxel_name(ptr: number): string {
-        return this.modloader.emulator.rdramRead16(ptr + 0x04).toString(16) +
-            this.modloader.emulator.rdramRead16(ptr + 0x06).toString(16) +
-            this.modloader.emulator.rdramRead16(ptr + 0x08).toString(16);
+        return this.modloader.emulator.rdramRead16(ptr + 0x04) + "|" +
+            this.modloader.emulator.rdramRead16(ptr + 0x06) + "|" +
+            this.modloader.emulator.rdramRead16(ptr + 0x08);
     }
 
     // #################################################
@@ -1222,25 +1222,39 @@ export class BkOnline_Handlers {
         this.modloader.clientSide.sendPacket(pData);
     }
 
-    handle_level_specific_items() {
+    handle_items() {
         // Initializers
         let team = this.parent.cDB.team;
         let level = this.parent.cDB.curLvl;
 
         // Detect Changes
         this.core.save.inventory.gold_bullions = this.parent.cDB.file[team].levelData[level].gold.length;
-
-        if (this.parent.cDB.file[team].levelData[level].present_b)
-            this.core.save.inventory.present_blue = 1;
-
-        if (this.parent.cDB.file[team].levelData[level].present_g)
-            this.core.save.inventory.present_green = 1;
-
-        if (this.parent.cDB.file[team].levelData[level].present_r)
-            this.core.save.inventory.present_red = 1;
-
+        this.core.save.inventory.present_blue = this.parent.cDB.file[team].levelData[level].present_b;
+        this.core.save.inventory.present_green = this.parent.cDB.file[team].levelData[level].present_g;
+        this.core.save.inventory.present_red = this.parent.cDB.file[team].levelData[level].present_r;
         this.core.save.inventory.caterpillar = this.parent.cDB.file[team].levelData[level].caterpillars.length;
         this.core.save.inventory.acorn = this.parent.cDB.file[team].levelData[level].acorns.length;
+    }
+
+    handle_jiggy_count() {
+        // Initializers
+        let pData: Net.SyncLevelNumbered;
+        let team = this.parent.cDB.team;
+        let level = this.parent.cDB.curLvl;
+        let val = this.core.save.inventory.lvl_jiggies;
+        let valDB = this.parent.cDB.file[team].levelData[level].jiggies;
+
+        // Detect Changes
+        if (val === valDB) return;
+
+        // Process Changes
+        if (val < valDB) val = valDB;
+        this.core.save.inventory.lvl_jiggies = val;
+
+        // Send Changes to Server
+        this.parent.cDB.file[team].levelData[level].jiggies = val;
+        pData = new Net.SyncLevelNumbered(this.modloader.clientLobby, 'SyncJiggyCount', team, level, val, false);
+        this.modloader.clientSide.sendPacket(pData);
     }
 
     handle_moves() {
@@ -1390,10 +1404,6 @@ export class BkOnline_Handlers {
             false
         );
         this.modloader.clientSide.sendPacket(pData);
-    }
-
-    handle_items() {
-
     }
 
     handle_permanence_counts() {
@@ -1579,6 +1589,10 @@ export class BkOnline_Handlers {
                 } else { // We don't have this, make it visible again!
                     this.mod_voxel(ptr, true);
                 }
+
+                // TMP
+                this.log("FOUND A GOLD!");
+
                 break;
 
             case API.VoxelIdType.PRESENT_BLUE:

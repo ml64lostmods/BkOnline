@@ -56,6 +56,7 @@ export class LevelData {
     scene: any = {};
     onotes: number = 0;
     jinjos: number = 0;
+    jiggies: number = 0;
 
     // Level Specific
     gold: number[] = new Array<number>();
@@ -63,9 +64,9 @@ export class LevelData {
     caterpillars: number[] = new Array<number>();
     acorns: number[] = new Array<number>();
 
-    present_b: boolean = false;
-    present_g: boolean = false;
-    present_r: boolean = false;
+    present_b: number = 0;
+    present_g: number = 0;
+    present_r: number = 0;
 }
 
 export class SceneData {
