@@ -77,7 +77,6 @@ export class BkOnline_Handlers {
         this.handle_flags_token(bufData!, bufStorage!);
 
         // Non-Flags Handlers
-        this.handle_jiggy_count();
         this.handle_moves();
         this.handle_events_level();
         this.handle_events_scene();
@@ -86,6 +85,7 @@ export class BkOnline_Handlers {
         this.handle_permanence_counts();
         this.handle_note_totals(bufData!, bufStorage!);
         this.handle_items();
+        this.handle_jiggy_count();
 
         // Force Despawn Code
         if (transitState !== 0) return;

@@ -1,6 +1,6 @@
 {
   "name": "BkOnline",
-  "version": "2.0.22",
+  "version": "2.0.23",
   "description": "An online multiplayer mod for Banjo Kazooie",
   "main": "BkOnline.js",
   "author": "SpiceyWolf, Mittenz",
