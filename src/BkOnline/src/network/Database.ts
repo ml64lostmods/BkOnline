@@ -56,7 +56,6 @@ export class LevelData {
     scene: any = {};
     onotes: number = 0;
     jinjos: number = 0;
-    jiggies: number = 0;
 
     // Level Specific
     gold: number[] = new Array<number>();

@@ -262,24 +262,6 @@ export class BkOnline_Client {
         this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Jinjo}');
     }
     
-    @NetworkHandler('SyncJiggyCount')
-    onClient_SyncJiggyCount(packet: Net.SyncLevelNumbered) {
-        this.log('Received: {Level Specific - Jiggies}');
-
-        // Detect Changes
-        let level = packet.level;
-
-        // Ensure we have this level/scene data!
-        this.handlers.check_db_instance(this.parent.cDB, packet.team, level, 0);
-
-        let map = this.parent.cDB.file[packet.team].levelData[level];
-        if (map.jiggies === packet.value) return;
-        map.jiggies = packet.value;
-
-        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Level Specific - Jiggies}');
-    }
-
-
     @NetworkHandler('SyncObjectNotes')
     onClient_SyncObjectNotes(packet: Net.SyncLevelNumbered) {
         this.log('Received: {Level Note Count}');

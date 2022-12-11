@@ -84,7 +84,7 @@ export class BkOnline_Handlers {
         // Order-Specific Handlers
         this.handle_permanence_counts();
         this.handle_note_totals(bufData!, bufStorage!);
-        this.handle_items();
+        //this.handle_items();
         this.handle_jiggy_count();
 
         // Force Despawn Code
@@ -899,7 +899,7 @@ export class BkOnline_Handlers {
 
             if (i > 10 && i < 17) continue; // Puzzle gap
             if (bufData[i] === bufStorage[i]) continue;
-
+            
             bufData[i] |= bufStorage[i];
             this.core.save.flags_game.set(i, bufData[i]);
             needUpdate = true;
@@ -931,17 +931,17 @@ export class BkOnline_Handlers {
 
         // GV Pyramid count
         val = bufStorage[31] & 0x000000fc;
-        if ((bufData[11] & 0x0000001f) !== val) {
-            bufData[11] |= val;
-            this.core.save.flags_game.set(11, bufData[11]);
+        if ((bufData[31] & 0x0000001f) !== val) {
+            bufData[31] |= val;
+            this.core.save.flags_game.set(31, bufData[31]);
             needUpdate = true;
         }
 
         // Actually count pyramid now
         let pval = bufStorage[31] & 3;
-        if ((bufData[11] & 3) < pval) {
-            bufData[11] = val | pval;
-            this.core.save.flags_game.set(11, bufData[11]);
+        if ((bufData[31] & 3) < pval) {
+            bufData[31] = val | pval;
+            this.core.save.flags_game.set(31, bufData[31]);
             needUpdate = true;
         }
 
@@ -1591,7 +1591,7 @@ export class BkOnline_Handlers {
                 }
 
                 // TMP
-                this.log("FOUND A GOLD!");
+                this.log("Gold Bullion de/re-spawn check invoked.")
 
                 break;
 
@@ -1605,6 +1605,7 @@ export class BkOnline_Handlers {
                     this.mod_voxel(ptr, true);
                 }
 
+                // TMP
                 this.log("Present [Blue] de/re-spawn check invoked.")
 
                 break;
@@ -1619,6 +1620,7 @@ export class BkOnline_Handlers {
                     this.mod_voxel(ptr, true);
                 }
 
+                // TMP
                 this.log("Present [Green] de/re-spawn check invoked.")
                 
                 break;
@@ -1633,6 +1635,7 @@ export class BkOnline_Handlers {
                     this.mod_voxel(ptr, true);
                 }
 
+                // TMP
                 this.log("Present [Red] de/re-spawn check invoked.")
                 
                 break;
@@ -1646,6 +1649,10 @@ export class BkOnline_Handlers {
                 } else { // We don't have this, make it visible again!
                     this.mod_voxel(ptr, true);
                 }
+
+                // TMP
+                this.log("Caterpillar de/re-spawn check invoked.")
+                
                 break;
 
             case API.VoxelIdType.ACORN:
@@ -1657,6 +1664,10 @@ export class BkOnline_Handlers {
                 } else { // We don't have this, make it visible again!
                     this.mod_voxel(ptr, true);
                 }
+
+                // TMP
+                this.log("Acorn de/re-spawn check invoked.")
+                
                 break;
         }
     }

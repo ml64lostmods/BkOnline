@@ -347,34 +347,6 @@ export class BkOnline_Server {
         this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Jinjo}');
     }
 
-    @ServerNetworkHandler('SyncJiggyCount')
-    onServer_SyncJiggyCount(packet: Net.SyncLevelNumbered) {
-        this.log('Received: {Level Specific - Jiggies}');
-        let sDB = this.sDB(packet.lobby);
-        if (sDB === null) return;
-
-        let level = packet.level;
-
-        // Ensure we have this level/scene data!
-        this.handlers.check_db_instance(sDB, packet.team, level, 0);
-
-        let map = sDB.file[packet.team].levelData[level];
-        if (map.jiggies < packet.value) return;
-        map.jiggies = packet.value;
-
-        let pData = new Net.SyncLevelNumbered(
-            packet.lobby,
-            'SyncJiggyCount',
-            packet.team,
-            level,
-            map.jiggies,
-            true
-        );
-        this.modloader.serverSide.sendPacket(pData);
-
-        this.log('Updated Team[' + API.ProfileType[packet.team] + ']: {Level Specific - Jiggies}');
-    }
-
     @ServerNetworkHandler('SyncObjectNotes')
     onServer_SyncObjectNotes(packet: Net.SyncLevelNumbered) {
         this.log('Received: {Level Note Count}');
